@@ -14,6 +14,7 @@
   const world = ISO.genWorld();
   world.drops = [];
   const player = ENTITIES.makePlayer();
+  window._player_ref = player;
   // Re-apply traits / Past Life
   const savedTraits = TRAITS.load() || [];
   TRAITS.applyTraits(player, savedTraits);
@@ -576,8 +577,8 @@
     if (!prompt) {
       const doorHit = ISO.nearestDoor(world, player.wx, player.wy, 1.4);
       if (doorHit && doorHit.distance < 1.3) {
-        const open = doorHit.structure.door.open;
-        prompt = `${open ? 'Close' : 'Open'} <b>door</b> · <kbd>E</kbd>`;
+        const door = doorHit.isInterior ? doorHit.structure.interiorDoor : doorHit.structure.door;
+        prompt = `${door.open ? 'Close' : 'Open'} <b>door</b> · <kbd>E</kbd>`;
       }
     }
     if (!prompt) {
@@ -640,6 +641,6 @@
 
   // Initial frame so canvas isn't blank behind splash
   RENDER.centerCameraOn(player.wx, player.wy);
-  RENDER.render(world, player, enemies, world.drops, time);
+  RENDER.render(world, player, enemies, world.drops, time, civilians);
 
 })();

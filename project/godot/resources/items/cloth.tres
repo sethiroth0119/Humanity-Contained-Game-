@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Item" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cloth"
+display_name = "Cloth"
+description = "Rough weave. Useful."
+kind = 0
+stack = 30

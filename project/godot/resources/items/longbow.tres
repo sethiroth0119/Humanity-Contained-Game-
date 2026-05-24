@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="WeaponItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponItem.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"longbow"
+display_name = "Yew Longbow"
+description = "Quiet death from afar."
+kind = 3
+stack = 1
+shape = 4
+damage = 28.0
+attack_range = 8.0
+arc = 0.2
+cooldown_ms = 750
+stamina_cost = 6.0
+ranged = true
+ammo_id = &"arrow"
+spread = 0.05

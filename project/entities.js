@@ -270,10 +270,14 @@ function doRanged(player, world, enemies, def, log, civilians) {
   };
 
   if (def.ammo === 'shotgun_shell' || def.ammo === 'pistol_round') {
-    // make some noise — alert nearby enemies
+    emitNoise(world, player.wx, player.wy, 22, 2200);
     for (const e of enemies) {
       if (dist(e.wx, e.wy, player.wx, player.wy) < 14) e.alert = true;
     }
+  } else if (def.shape === 'bow') {
+    emitNoise(world, player.wx, player.wy, 8, 1500);
+  } else if (def.ammo === 'mana') {
+    emitNoise(world, player.wx, player.wy, 8, 1500);
   }
 }
 

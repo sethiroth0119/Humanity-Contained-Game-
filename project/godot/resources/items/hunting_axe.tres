@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponItem.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"hunting_axe"
+display_name = "Hunting Axe"
+description = "Heavy. Splits wood and skull alike."
+kind = 3
+stack = 1
+shape = 1
+damage = 32.0
+attack_range = 1.2
+arc = 1.1
+cooldown_ms = 800
+stamina_cost = 14.0
+ranged = false

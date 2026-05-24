@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponItem.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"iron_spear"
+display_name = "Iron Spear"
+description = "Reach beyond the grasping dead."
+kind = 3
+stack = 1
+shape = 3
+damage = 22.0
+attack_range = 2.0
+arc = 0.6
+cooldown_ms = 600
+stamina_cost = 10.0
+ranged = false

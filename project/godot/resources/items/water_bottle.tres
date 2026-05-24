@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Item" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"water_bottle"
+display_name = "Water Bottle"
+description = "Sealed. Clean."
+kind = 2
+stack = 5
+restore_thirst = 50.0

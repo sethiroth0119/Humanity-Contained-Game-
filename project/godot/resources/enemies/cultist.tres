@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/EnemyData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/AI/CultistAI.gd" id="2"]
+[ext_resource type="Resource" path="res://resources/items/wraith_ash.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+id = &"cultist"
+display_name = "Cultist"
+max_hp = 28.0
+move_speed_tiles = 1.6
+damage = 16.0
+attack_range = 7.0
+attack_cooldown_ms = 1800
+sight_range_tiles = 13.0
+ghost = false
+ai_script = ExtResource("2")
+drop_items = [ExtResource("3")]
+drop_chances = [0.85]
+drop_qty_min = [1]
+drop_qty_max = [2]

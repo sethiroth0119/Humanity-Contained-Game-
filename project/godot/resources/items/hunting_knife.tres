@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponItem.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"hunting_knife"
+display_name = "Hunting Knife"
+description = "Better than fists. Barely."
+kind = 3
+stack = 1
+shape = 2
+damage = 10.0
+attack_range = 0.8
+arc = 0.8
+cooldown_ms = 240
+stamina_cost = 3.0
+ranged = false

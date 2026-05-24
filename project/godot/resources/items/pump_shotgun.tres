@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="WeaponItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponItem.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"pump_shotgun"
+display_name = "Pump Shotgun"
+description = "Close and loud."
+kind = 3
+stack = 1
+shape = 7
+damage = 50.0
+attack_range = 4.0
+arc = 0.3
+cooldown_ms = 1000
+stamina_cost = 0.0
+ranged = true
+ammo_id = &"shotgun_shell"
+spread = 0.5

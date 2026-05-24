@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Item" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"shotgun_shell"
+display_name = "Shotgun Shell"
+description = "12-gauge. Each one counts."
+kind = 1
+stack = 30

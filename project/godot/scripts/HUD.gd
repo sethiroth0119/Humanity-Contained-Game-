@@ -17,14 +17,14 @@
 
 extends CanvasLayer
 
-@onready var hp_bar:      Control = $StatsTL/HP/Fill
-@onready var stam_bar:    Control = $StatsTL/Stam/Fill
+@onready var hp_bar:      ProgressBar = $StatsTL/HP/Fill
+@onready var stam_bar:    ProgressBar = $StatsTL/Stam/Fill
 @onready var hunger_row:  Control = $StatsTL/Hunger
 @onready var thirst_row:  Control = $StatsTL/Thirst
 @onready var mana_row:    Control = $StatsTL/Mana
-@onready var hunger_bar:  Control = $StatsTL/Hunger/Fill
-@onready var thirst_bar:  Control = $StatsTL/Thirst/Fill
-@onready var mana_bar:    Control = $StatsTL/Mana/Fill
+@onready var hunger_bar:  ProgressBar = $StatsTL/Hunger/Fill
+@onready var thirst_bar:  ProgressBar = $StatsTL/Thirst/Fill
+@onready var mana_bar:    ProgressBar = $StatsTL/Mana/Fill
 
 @onready var time_label:  Label = $Clock/Time
 @onready var day_label:   Label = $Clock/Day
@@ -56,9 +56,8 @@ func _refresh_stats() -> void:
 	_set_bar(thirst_bar, player.thirst / player.max_thirst)
 	_set_bar(mana_bar,   player.mana   / player.max_mana)
 
-func _set_bar(node: Control, pct: float) -> void:
-	pct = clampf(pct, 0.0, 1.0)
-	node.anchor_right = pct
+func _set_bar(node: ProgressBar, pct: float) -> void:
+	node.value = clampf(pct, 0.0, 1.0) * 100.0
 
 func _refresh_clock(_minutes: float) -> void:
 	var h: int = int(GameState.hour())
