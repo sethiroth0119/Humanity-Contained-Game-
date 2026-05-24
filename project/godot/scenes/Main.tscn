@@ -1,18 +1,18 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
-[ext_resource type="Script" path="res://scripts/WorldGen.gd" id="1_worldgen"]
-[ext_resource type="Script" path="res://scripts/DayNight.gd" id="2_daynight"]
-[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3_player"]
-[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="4_hud"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/Skeleton.tscn" id="5_skeleton"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/Wraith.tscn" id="6_wraith"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/Ghoul.tscn" id="7_ghoul"]
-[ext_resource type="PackedScene" path="res://scenes/Drop.tscn" id="8_drop"]
+[ext_resource type="Script" path="res://scripts/WorldGen.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/DayNight.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Skeleton.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Wraith.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Ghoul.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/Drop.tscn" id="8"]
 
 [node name="Main" type="Node2D"]
 
 [node name="DayNight" type="CanvasModulate" parent="."]
-script = ExtResource("2_daynight")
+script = ExtResource("2")
 
 [node name="Ground" type="TileMapLayer" parent="."]
 
@@ -25,17 +25,17 @@ script = ExtResource("2_daynight")
 [node name="Drops" type="Node2D" parent="."]
 
 [node name="WorldGen" type="Node2D" parent="."]
-script = ExtResource("1_worldgen")
+script = ExtResource("1")
 ground_layer = NodePath("../Ground")
 structures_root = NodePath("../Structures")
 props_root = NodePath("../Props")
 enemies_root = NodePath("../Enemies")
 drops_root = NodePath("../Drops")
-skeleton_scene = ExtResource("5_skeleton")
-wraith_scene = ExtResource("6_wraith")
-ghoul_scene = ExtResource("7_ghoul")
-drop_scene = ExtResource("8_drop")
+skeleton_scene = ExtResource("5")
+wraith_scene = ExtResource("6")
+ghoul_scene = ExtResource("7")
+drop_scene = ExtResource("8")
 
-[node name="Player" parent="." instance=ExtResource("3_player")]
+[node name="Player" parent="." instance=ExtResource("3")]
 
-[node name="HUD" parent="." instance=ExtResource("4_hud")]
+[node name="HUD" parent="." instance=ExtResource("4")]

@@ -1,11 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="1_base"]
-[ext_resource type="Resource" path="res://resources/enemies/ghoul.tres" id="2_data"]
+[ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="1"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul.tres" id="2"]
 
-[node name="Ghoul" instance=ExtResource("1_base")]
-data = ExtResource("2_data")
-
-[node name="Sprite" parent="."]
-fill_color = Color(0.38, 0.58, 0.28)
-outline_color = Color(0.08, 0.18, 0.05, 0.7)
+[node name="Ghoul" instance=ExtResource("1")]
+data = ExtResource("2")
