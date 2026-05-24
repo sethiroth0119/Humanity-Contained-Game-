@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/Enemy.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/PlaceholderSprite.gd" id="2_sprite"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1"]
 radius = 12.0
@@ -12,6 +13,9 @@ collision_mask = 3
 script = ExtResource("1_enemy")
 
 [node name="Sprite" type="Node2D" parent="."]
+script = ExtResource("2_sprite")
+fill_color = Color(0.75, 0.28, 0.28)
+outline_color = Color(0.2, 0.0, 0.0, 0.7)
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_1")

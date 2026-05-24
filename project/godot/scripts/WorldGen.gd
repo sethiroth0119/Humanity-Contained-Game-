@@ -45,8 +45,13 @@ enum Tile { GRASS, GRASS_DARK, MOSS, DIRT, ROAD, ROAD_EDGE, SIDEWALK, FLOOR_WOOD
 var rng: RandomNumberGenerator
 
 func _ready() -> void:
+	add_to_group("worldgen")
 	rng = RandomNumberGenerator.new()
 	rng.seed = seed_value
+	if ground_layer != null and ground_layer.tile_set == null:
+		var pa: Node = get_node_or_null("/root/PlaceholderAssets")
+		if pa != null:
+			ground_layer.tile_set = pa.tile_set
 	_fill_ground()
 	_carve_roads()
 	_cemetery()

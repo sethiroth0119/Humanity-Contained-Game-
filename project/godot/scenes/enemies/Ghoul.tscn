@@ -5,3 +5,7 @@
 
 [node name="Ghoul" instance=ExtResource("1_base")]
 data = ExtResource("2_data")
+
+[node name="Sprite" parent="."]
+fill_color = Color(0.38, 0.58, 0.28)
+outline_color = Color(0.08, 0.18, 0.05, 0.7)

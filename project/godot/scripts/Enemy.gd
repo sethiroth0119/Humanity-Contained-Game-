@@ -112,10 +112,10 @@ func move_toward_tile(target_tile: Vector2, delta: float) -> void:
 # Loot drop
 # ----------------------------------------------------------------------
 func _drop_loot() -> void:
+	var wg: Node = get_tree().get_first_node_in_group("worldgen")
 	for i in data.drop_items.size():
 		if randf() > data.drop_chances[i]:
 			continue
 		var q: int = randi_range(data.drop_qty_min[i], data.drop_qty_max[i])
-		# Spawn a ground-drop scene at this position. WorldGen handles the actual scene.
-		EventBus.emit_signal("item_picked_up", data.drop_items[i], 0)  # placeholder
-		# Real implementation: get_parent().spawn_drop(data.drop_items[i], q, global_position)
+		if wg != null:
+			wg.spawn_drop(data.drop_items[i], q, global_position)
