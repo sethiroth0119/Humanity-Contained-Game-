@@ -353,53 +353,82 @@ class NYCBuilding extends Node2D:
 		_has_fire_escape = _rng.randf() < 0.6
 		_has_water_tower = _rng.randf() < 0.35 and _stories > 4
 
-		# Choose facade palette — NYC brick/concrete mix
-		var palettes: Array[Dictionary] = [
-			{f=Color(0.55, 0.32, 0.22), r=Color(0.35, 0.20, 0.14), w=Color(0.55, 0.72, 0.85)},  # brick red
-			{f=Color(0.62, 0.58, 0.52), r=Color(0.42, 0.38, 0.32), w=Color(0.60, 0.75, 0.90)},  # limestone
-			{f=Color(0.44, 0.44, 0.46), r=Color(0.28, 0.28, 0.30), w=Color(0.50, 0.68, 0.82)},  # concrete
-			{f=Color(0.50, 0.46, 0.38), r=Color(0.30, 0.26, 0.20), w=Color(0.55, 0.70, 0.88)},  # brownstone
+		# NYC brick/concrete palettes
+		var palettes := [
+			{"f": Color(0.55, 0.32, 0.22), "r": Color(0.35, 0.20, 0.14), "w": Color(0.55, 0.72, 0.85)},
+			{"f": Color(0.62, 0.58, 0.52), "r": Color(0.42, 0.38, 0.32), "w": Color(0.60, 0.75, 0.90)},
+			{"f": Color(0.44, 0.44, 0.46), "r": Color(0.28, 0.28, 0.30), "w": Color(0.50, 0.68, 0.82)},
+			{"f": Color(0.50, 0.46, 0.38), "r": Color(0.30, 0.26, 0.20), "w": Color(0.55, 0.70, 0.88)},
 		]
 		var p: Dictionary = palettes[_rng.randi() % palettes.size()]
-		_facade_color = p.f
-		_roof_color = p.r
-		_window_color = p.w
+		_facade_color = p["f"]
+		_roof_color   = p["r"]
+		_window_color = p["w"]
 		_graffiti_color = Color(_rng.randf(), _rng.randf() * 0.4, _rng.randf() * 0.3)
 
+	# Bilinear interpolation across a parallelogram face.
+	# corners: [top-left, top-right, bottom-right, bottom-left] in screen space
+	# tx 0→1 = left→right;  ty 0→1 = bottom→top
+	func _bilerp(tl: Vector2, tr: Vector2, br: Vector2, bl: Vector2,
+				 tx: float, ty: float) -> Vector2:
+		return bl.lerp(br, tx).lerp(tl.lerp(tr, tx), ty)
+
 	func _draw() -> void:
+		_rng.seed = rng_seed   # reset for deterministic draws on every redraw
+
 		var tw: float = 64.0
 		var th: float = 32.0
-		# Isometric tile footprint in screen space
 		var fp_w: float = block_w * tw * 0.5
 		var fp_h: float = block_h * th * 0.5
-		var story_h: float = minf(20.0, 180.0 / _stories)
+		var story_h: float = minf(22.0, 160.0 / float(_stories))
 		var total_h: float = _stories * story_h
 
-		# --- Left face (west) ---
-		var left_pts := PackedVector2Array([
-			Vector2(-fp_w, -total_h),
-			Vector2(0.0,   -total_h - fp_h),
-			Vector2(0.0,   -fp_h),
-			Vector2(-fp_w, 0.0)
-		])
-		var left_base: Color = _facade_color.darkened(0.25)
-		draw_colored_polygon(left_pts, left_base)
+		# Face corners — [tl, tr, br, bl] so _bilerp works correctly
+		# Left face (NW-facing)
+		var L_tl := Vector2(-fp_w, -total_h)
+		var L_tr := Vector2(0.0,   -total_h - fp_h)
+		var L_br := Vector2(0.0,   -fp_h)
+		var L_bl := Vector2(-fp_w,  0.0)
 
-		# Brick / panel pattern on left face
-		_draw_facade_left(left_pts, left_base, total_h, story_h)
+		# Right face (NE-facing)
+		var R_tl := Vector2(0.0,   -total_h - fp_h)
+		var R_tr := Vector2(fp_w,  -total_h)
+		var R_br := Vector2(fp_w,   0.0)
+		var R_bl := Vector2(0.0,   -fp_h)
 
-		# --- Right face (east) ---
-		var right_pts := PackedVector2Array([
-			Vector2(0.0,  -total_h - fp_h),
-			Vector2(fp_w, -total_h),
-			Vector2(fp_w, 0.0),
-			Vector2(0.0,  -fp_h)
-		])
-		var right_base: Color = _facade_color.darkened(0.12)
-		draw_colored_polygon(right_pts, right_base)
-		_draw_facade_right(right_pts, right_base, total_h, story_h)
+		# Draw solid faces
+		draw_colored_polygon(PackedVector2Array([L_tl, L_tr, L_br, L_bl]),
+			_facade_color.darkened(0.28))
+		draw_colored_polygon(PackedVector2Array([R_tl, R_tr, R_br, R_bl]),
+			_facade_color.darkened(0.10))
 
-		# --- Roof ---
+		# Story divider lines (correct bilinear edges)
+		for s in _stories + 1:
+			var ty := float(s) / float(_stories)
+			draw_line(L_bl.lerp(L_tl, ty), L_br.lerp(L_tr, ty), Color(0,0,0,0.18), 0.8)
+			draw_line(R_bl.lerp(R_tl, ty), R_br.lerp(R_tr, ty), Color(0,0,0,0.18), 0.8)
+
+		# Windows on both faces
+		_draw_windows(L_tl, L_tr, L_br, L_bl, maxi(1, block_w - 1))
+		_draw_windows(R_tl, R_tr, R_br, R_bl, maxi(1, block_h - 1))
+
+		# Fire escape ladders on left face
+		if _has_fire_escape:
+			for s in mini(_stories, 5):
+				var p_b := _bilerp(L_tl, L_tr, L_br, L_bl, 0.22, float(s) / float(_stories))
+				var p_t := _bilerp(L_tl, L_tr, L_br, L_bl, 0.22, float(s + 1) / float(_stories))
+				draw_line(p_b + Vector2(-4, 0), p_b + Vector2(4, 0), Color(0.28, 0.22, 0.16), 1.5)
+				draw_line(p_b + Vector2(-3.5, 0), p_t + Vector2(-3.5, 0), Color(0.28, 0.22, 0.16), 1.0)
+				draw_line(p_b + Vector2(3.5, 0),  p_t + Vector2(3.5, 0),  Color(0.28, 0.22, 0.16), 1.0)
+
+		# Graffiti patch on left face ground floor
+		if _rng.randf() < 0.55:
+			var gp := _bilerp(L_tl, L_tr, L_br, L_bl,
+				0.3 + _rng.randf() * 0.4, 0.08 + _rng.randf() * 0.12)
+			draw_rect(Rect2(gp.x - story_h * 0.35, gp.y - story_h * 0.12,
+				story_h * 0.70, story_h * 0.22), _graffiti_color.lightened(0.2))
+
+		# Roof
 		var roof_pts := PackedVector2Array([
 			Vector2(-fp_w, -total_h),
 			Vector2(0.0,   -total_h - fp_h),
@@ -407,112 +436,64 @@ class NYCBuilding extends Node2D:
 			Vector2(0.0,   -total_h + fp_h)
 		])
 		draw_colored_polygon(roof_pts, _roof_color)
-		draw_polyline(roof_pts + PackedVector2Array([roof_pts[0]]), Color(0,0,0,0.4), 1.0)
+		draw_polyline(PackedVector2Array([roof_pts[0], roof_pts[1], roof_pts[2],
+			roof_pts[3], roof_pts[0]]), Color(0,0,0,0.45), 1.2)
 
-		# Rooftop details
+		# Silhouette outlines
+		draw_line(L_tl, L_bl, Color(0,0,0,0.5), 1.0)
+		draw_line(R_tr, R_br, Color(0,0,0,0.5), 1.0)
+		draw_line(L_bl, L_br, Color(0,0,0,0.55), 1.2)
+
 		if _has_water_tower:
-			_draw_water_tower(Vector2(fp_w * 0.3, -total_h - fp_h * 0.3))
-
-		# Damage — blown-out section
+			_draw_water_tower(Vector2(fp_w * 0.38, -total_h - fp_h * 0.22))
 		if _damaged:
 			_draw_damage(fp_w, fp_h, total_h, story_h)
 
-	func _draw_facade_left(pts: PackedVector2Array, base: Color, total_h: float, story_h: float) -> void:
-		var fp_w: float = absf(pts[0].x)
-		var fp_h: float = absf(pts[1].y - pts[0].y)
-		# Story lines
-		for s in _stories:
-			var t: float = float(s) / float(_stories)
-			var y_off: float = -total_h * t
-			var p0 := Vector2(-fp_w, y_off)
-			var p1 := Vector2(0.0, y_off - fp_h)
-			draw_line(p0, p1, Color(0, 0, 0, 0.15), 0.8)
-		# Windows
-		var win_cols: int = maxi(1, int(block_w * 0.7))
+	func _draw_windows(tl: Vector2, tr: Vector2, br: Vector2, bl: Vector2,
+					   cols: int) -> void:
+		var story_h: float = minf(22.0, 160.0 / float(_stories))
+		var ww: float = story_h * 0.13
+		var wh: float = story_h * 0.30
 		for s in _stories - 1:
-			for c in win_cols:
-				var tx: float = (float(c) + 0.5) / float(win_cols)
-				# parametric along left face
-				var wx: float = lerpf(pts[0].x, pts[3].x, tx)
-				var base_y: float = lerpf(pts[0].y, pts[3].y, tx)
-				var wy: float = base_y - story_h * (float(s) + 0.5)
-				var wy_top: float = base_y - story_h * (float(s) + 0.85)
-				var ww: float = story_h * 0.25
-				# Skip occasionally for apocalyptic look
+			var ty := (float(s) + 0.5) / float(_stories)
+			for c in cols:
+				var tx := (float(c) + 0.5) / float(cols)
 				if _rng.randf() < 0.15:
 					continue
-				var broken: bool = _rng.randf() < 0.3
-				var wc: Color = Color(0.05, 0.05, 0.08, 0.8) if broken else _window_color
-				draw_rect(Rect2(wx - ww, wy_top, ww * 2.0, story_h * 0.35), wc)
+				var p := _bilerp(tl, tr, br, bl, tx, ty)
+				var broken := _rng.randf() < 0.30
+				var wc := Color(0.05, 0.05, 0.08, 0.9) if broken else _window_color
+				draw_rect(Rect2(p.x - ww, p.y - wh * 0.5, ww * 2.0, wh), wc)
 				if not broken:
-					draw_line(Vector2(wx - ww, (wy + wy_top) * 0.5), Vector2(wx + ww, (wy + wy_top) * 0.5), Color(0,0,0,0.3), 0.5)
-		# Fire escape
-		if _has_fire_escape:
-			var fe_x: float = pts[0].x * 0.4
-			for s in mini(_stories - 1, 5):
-				var fy: float = -story_h * (s + 1)
-				draw_line(Vector2(fe_x - 3, fy), Vector2(fe_x + 3, fy), Color(0.25, 0.22, 0.18), 1.5)
-				draw_line(Vector2(fe_x - 3, fy), Vector2(fe_x - 3, fy + story_h * 0.8), Color(0.25, 0.22, 0.18), 1.0)
-				draw_line(Vector2(fe_x + 3, fy), Vector2(fe_x + 3, fy + story_h * 0.8), Color(0.25, 0.22, 0.18), 1.0)
-		# Graffiti on ground floor
-		if _rng.randf() < 0.5:
-			var gx: float = pts[0].x * 0.6
-			var gy: float = -story_h * 0.5
-			draw_rect(Rect2(gx, gy - story_h * 0.25, story_h * 0.6, story_h * 0.22), _graffiti_color.lightened(0.2))
-
-	func _draw_facade_right(pts: PackedVector2Array, base: Color, total_h: float, story_h: float) -> void:
-		var fp_w: float = absf(pts[1].x)
-		var fp_h: float = absf(pts[0].y - pts[1].y)
-		var win_cols: int = maxi(1, int(block_h * 0.7))
-		for s in _stories - 1:
-			for c in win_cols:
-				var tx: float = (float(c) + 0.5) / float(win_cols)
-				var wx: float = lerpf(0.0, pts[1].x, tx)
-				var base_y: float = lerpf(pts[0].y, pts[1].y, tx)
-				var wy_top: float = base_y - story_h * (float(s) + 0.85)
-				var ww: float = story_h * 0.25
-				if _rng.randf() < 0.15:
-					continue
-				var broken: bool = _rng.randf() < 0.3
-				var wc: Color = Color(0.05, 0.05, 0.08, 0.8) if broken else _window_color
-				draw_rect(Rect2(wx - ww, wy_top, ww * 2.0, story_h * 0.35), wc)
-		for s in _stories:
-			var t: float = float(s) / float(_stories)
-			var y_off: float = -total_h * t
-			draw_line(Vector2(0.0, y_off - fp_h), Vector2(fp_w, y_off), Color(0, 0, 0, 0.15), 0.8)
+					draw_line(Vector2(p.x, p.y - wh * 0.5), Vector2(p.x, p.y + wh * 0.5),
+						Color(0, 0, 0, 0.22), 0.5)
 
 	func _draw_water_tower(pos: Vector2) -> void:
-		var tank_w: float = 12.0
-		var tank_h: float = 14.0
-		# Legs
-		draw_line(pos + Vector2(-tank_w * 0.5, 0), pos + Vector2(-tank_w * 0.3, tank_h), Color(0.3, 0.25, 0.2), 1.2)
-		draw_line(pos + Vector2(tank_w * 0.5, 0),  pos + Vector2(tank_w * 0.3, tank_h), Color(0.3, 0.25, 0.2), 1.2)
-		draw_line(pos + Vector2(0, -4), pos + Vector2(0, tank_h), Color(0.3, 0.25, 0.2), 1.2)
-		# Tank body
-		draw_circle(pos, tank_w * 0.5, Color(0.35, 0.28, 0.18))
-		draw_arc(pos, tank_w * 0.5, 0.0, TAU, 12, Color(0.18, 0.14, 0.08), 1.2)
-		# Cone roof
+		var tw: float = 10.0
+		var th: float = 12.0
+		draw_line(pos + Vector2(-tw * 0.5, 0), pos + Vector2(-tw * 0.3, th), Color(0.30, 0.24, 0.16), 1.2)
+		draw_line(pos + Vector2(tw * 0.5, 0),  pos + Vector2(tw * 0.3, th),  Color(0.30, 0.24, 0.16), 1.2)
+		draw_line(pos, pos + Vector2(0, th), Color(0.30, 0.24, 0.16), 1.0)
+		draw_circle(pos, tw * 0.5, Color(0.35, 0.28, 0.18))
+		draw_arc(pos, tw * 0.5, 0.0, TAU, 10, Color(0.20, 0.15, 0.09), 1.2)
 		draw_colored_polygon(PackedVector2Array([
-			pos + Vector2(-tank_w * 0.5, 0),
-			pos + Vector2(0, -tank_h * 0.5),
-			pos + Vector2(tank_w * 0.5, 0)
+			pos + Vector2(-tw * 0.5, 0),
+			pos + Vector2(0, -th * 0.45),
+			pos + Vector2(tw * 0.5, 0)
 		]), Color(0.22, 0.16, 0.10))
 
 	func _draw_damage(fp_w: float, fp_h: float, total_h: float, story_h: float) -> void:
-		# Jagged hole in upper-right corner of facade
-		var dmg_y: float = -total_h * (_rng.randf_range(0.4, 0.75))
-		var dmg_pts := PackedVector2Array([
-			Vector2(fp_w * 0.3, dmg_y - story_h),
-			Vector2(fp_w * 0.7, dmg_y - story_h * 1.5),
-			Vector2(fp_w * 0.9, dmg_y - story_h * 0.8),
-			Vector2(fp_w * 0.8, dmg_y - story_h * 0.2),
-			Vector2(fp_w * 0.4, dmg_y),
-		])
-		draw_colored_polygon(dmg_pts, Color(0.05, 0.04, 0.04, 0.85))
-		# Scorch marks
+		var dmg_y: float = -total_h * _rng.randf_range(0.40, 0.75)
 		draw_colored_polygon(PackedVector2Array([
-			Vector2(fp_w * 0.2, dmg_y),
-			Vector2(fp_w * 0.45, dmg_y - story_h * 2.0),
-			Vector2(fp_w * 0.6,  dmg_y - story_h * 1.5),
-			Vector2(fp_w * 0.35, dmg_y + story_h * 0.3),
-		]), Color(0.1, 0.06, 0.02, 0.5))
+			Vector2(fp_w * 0.28, dmg_y - story_h),
+			Vector2(fp_w * 0.65, dmg_y - story_h * 1.4),
+			Vector2(fp_w * 0.88, dmg_y - story_h * 0.7),
+			Vector2(fp_w * 0.78, dmg_y - story_h * 0.15),
+			Vector2(fp_w * 0.42, dmg_y + story_h * 0.1),
+		]), Color(0.05, 0.04, 0.04, 0.90))
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(fp_w * 0.20, dmg_y + story_h * 0.2),
+			Vector2(fp_w * 0.44, dmg_y - story_h * 1.8),
+			Vector2(fp_w * 0.56, dmg_y - story_h * 1.2),
+			Vector2(fp_w * 0.32, dmg_y + story_h * 0.35),
+		]), Color(0.12, 0.07, 0.02, 0.55))
