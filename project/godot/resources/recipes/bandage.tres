@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Recipe" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/Recipe.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/items/med_bandage.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/items/rag.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+id = &"r_bandage"
+output_item = ExtResource("2")
+output_qty = 1
+input_items = [ExtResource("3")]
+input_qty = [3]
+flavor = "Rough bandage."

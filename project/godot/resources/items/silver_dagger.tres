@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponItem.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"silver_dagger"
+display_name = "Silver Dagger"
+description = "Light. Silver sears the unliving."
+kind = 3
+stack = 1
+shape = 2               ; DAGGER
+damage = 12.0
+attack_range = 0.9
+arc = 0.9
+cooldown_ms = 280
+stamina_cost = 4.0
+bonus_vs_kind = &"wraith"
+bonus_multiplier = 2.0

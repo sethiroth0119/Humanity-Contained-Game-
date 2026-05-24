@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Humanity Contained — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=JetBrains+Mono:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="world"></canvas>
+</div>
+
+<!-- Atmospheric overlays -->
+<div id="night-overlay"></div>
+<div id="vignette"></div>
+<div id="hurt-flash"></div>
+
+<!-- Custom crosshair cursor -->
+<div id="cursor"><div class="ring"></div></div>
+
+<!-- HUD layer -->
+<div id="hud">
+  <!-- Top-left: stats -->
+  <div class="hud-corner-tl">
+    <div class="stat-bar hp">
+      <span class="label">Vitae</span>
+      <div class="track"><div class="fill"></div></div>
+      <span class="val">100/100</span>
+    </div>
+    <div class="stat-bar stam">
+      <span class="label">Wind</span>
+      <div class="track"><div class="fill"></div></div>
+      <span class="val">100/100</span>
+    </div>
+    <div class="stat-bar mana hidden">
+      <span class="label">Mana</span>
+      <div class="track"><div class="fill"></div></div>
+      <span class="val">60/60</span>
+    </div>
+    <div class="stat-bar hung hidden">
+      <span class="label">Hunger</span>
+      <div class="track"><div class="fill"></div></div>
+      <span class="val">100/100</span>
+    </div>
+    <div class="stat-bar thir hidden">
+      <span class="label">Thirst</span>
+      <div class="track"><div class="fill"></div></div>
+      <span class="val">100/100</span>
+    </div>
+  </div>
+
+  <!-- Top-right: clock + minimap -->
+  <div class="hud-corner-tr">
+    <div class="time">17:00</div>
+    <div class="day">DAY 1</div>
+    <div class="phase">DUSK</div>
+  </div>
+  <div id="minimap"><canvas></canvas></div>
+
+  <!-- Bottom: hotbar -->
+  <div class="hud-bottom">
+    <div id="hotbar">
+      <div class="slot empty"><span class="key">1</span><span class="item">—</span><span class="qty"></span></div>
+      <div class="slot empty"><span class="key">2</span><span class="item">—</span><span class="qty"></span></div>
+      <div class="slot empty"><span class="key">3</span><span class="item">—</span><span class="qty"></span></div>
+      <div class="slot empty"><span class="key">4</span><span class="item">—</span><span class="qty"></span></div>
+      <div class="slot empty"><span class="key">5</span><span class="item">—</span><span class="qty"></span></div>
+    </div>
+  </div>
+
+  <!-- Interaction prompt -->
+  <div id="prompt"></div>
+
+  <!-- Message log -->
+  <div id="log"></div>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip"></div>
+
+<!-- Inventory Panel -->
+<div id="inventory" class="panel">
+  <div class="panel-header">
+    <span>Pack & Vestments</span>
+    <span class="close">[ESC]</span>
+  </div>
+  <div class="inv-body">
+    <div class="equip-col">
+      <h3>Equipped</h3>
+      <div class="equip-slot" id="eq-weapon">
+        <div class="box">WPN</div>
+        <div class="info"></div>
+      </div>
+      <div class="equip-slot" id="eq-armor">
+        <div class="box">ARM</div>
+        <div class="info"></div>
+      </div>
+      <div class="equip-slot" id="eq-shield">
+        <div class="box">SHD</div>
+        <div class="info"></div>
+      </div>
+      <div class="equip-slot" id="eq-acc">
+        <div class="box">AMT</div>
+        <div class="info"></div>
+      </div>
+      <div style="margin-top:14px; font-family:'JetBrains Mono', monospace; font-size:9px; letter-spacing:0.15em; opacity:0.45; line-height:1.7;">
+        CLICK item → use/equip<br>
+        RIGHT-CLICK → drop<br>
+        CLICK slot → unequip
+      </div>
+    </div>
+    <div>
+      <h3 style="font-family:'JetBrains Mono', monospace; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:oklch(0.55 0.01 90); font-weight:400; margin-bottom:10px;">Pack</h3>
+      <div class="inv-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Loot Panel -->
+<div id="loot" class="panel">
+  <div class="panel-header">
+    <span class="title">Container</span>
+    <span class="close">[ESC]</span>
+  </div>
+  <div class="loot-body"></div>
+</div>
+
+<!-- Crafting Panel -->
+<div id="crafting" class="panel">
+  <div class="panel-header">
+    <span>Workbench of the Hand</span>
+    <span class="close">[ESC]</span>
+  </div>
+  <div class="craft-body"></div>
+</div>
+
+<!-- Splash -->
+<div id="splash">
+  <h1>HUMANITY CONTAINED</h1>
+  <div class="sub">A prototype · directional combat · survive the cursed earth</div>
+  <div class="splash-actions">
+    <button id="splash-customize" class="ghost">Customize character</button>
+    <button id="splash-start" class="start">Step into the world</button>
+  </div>
+  <div class="hints">
+    <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> &nbsp; move<br>
+    <kbd>MOUSE</kbd> &nbsp; aim &nbsp; · &nbsp; <kbd>LMB</kbd> &nbsp; attack in direction &nbsp; · &nbsp; <kbd>RMB</kbd> &nbsp; block (with shield)<br>
+    <kbd>E</kbd> &nbsp; loot / pick up / speak &nbsp; · &nbsp; <kbd>TAB</kbd> &nbsp; pack &nbsp; · &nbsp; <kbd>C</kbd> &nbsp; craft &nbsp; · &nbsp; <kbd>K</kbd> &nbsp; character<br>
+    <kbd>1</kbd>—<kbd>5</kbd> &nbsp; quick slots &nbsp; · &nbsp; <kbd>R</kbd> &nbsp; check ammo
+  </div>
+</div>
+
+<!-- Character Creator (Traits + Sprites) -->
+<div id="creator">
+  <div class="creator-panel">
+    <div class="creator-header">
+      <div>
+        <div class="eyebrow">Character</div>
+        <h2>Step out as someone</h2>
+      </div>
+      <button class="creator-close">[ ESC ]</button>
+    </div>
+    <div class="creator-tabs"></div>
+    <div class="creator-body"></div>
+    <div class="creator-footer"></div>
+  </div>
+</div>
+
+<!-- Death overlay -->
+<div id="death">
+  <h2>NO LIGHT</h2>
+  <p>The veil takes you back.</p>
+  <button id="restart">Begin again</button>
+</div>
+
+<!-- Dialogue panel -->
+<div id="dialogue">
+  <div class="dialogue-inner">
+    <div class="speaker"></div>
+    <div class="line"></div>
+    <div class="dialogue-foot">
+      <span class="progress"></span>
+      <span class="advance-hint"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts (vanilla; load order matters) -->
+<script src="iso.js"></script>
+<script src="render.js"></script>
+<script src="traits.js"></script>
+<script src="jobs.js"></script>
+<script src="items.js"></script>
+<script src="entities.js"></script>
+<script src="ui.js"></script>
+<script src="creator.js"></script>
+<script src="game.js"></script>
+
+</body>
+</html>

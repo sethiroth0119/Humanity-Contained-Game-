@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Humanity Contained — Godot Handoff</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bone: oklch(0.92 0.01 90);
+    --bone-dim: oklch(0.72 0.01 90);
+    --bone-faint: oklch(0.52 0.01 90);
+    --bg: oklch(0.13 0.005 250);
+    --bg-deep: oklch(0.08 0.005 250);
+    --card: oklch(0.16 0.005 250);
+    --border: oklch(0.28 0.005 250);
+    --cursed: oklch(0.65 0.18 25);
+    --gold: oklch(0.78 0.10 85);
+    --moss: oklch(0.65 0.10 130);
+    --mana: oklch(0.70 0.14 280);
+    --godot: oklch(0.65 0.14 240);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--bone);
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.6;
+    padding: 60px 0 120px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+
+  /* ===== Header ===== */
+  header {
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 60px;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--bone-faint);
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 400;
+    font-size: 56px;
+    letter-spacing: 0.06em;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--gold);
+    font-weight: 500;
+  }
+  .lede {
+    font-size: 17px;
+    color: var(--bone-dim);
+    max-width: 760px;
+  }
+  .lede + .lede { margin-top: 12px; }
+
+  /* ===== Section headings ===== */
+  section { margin-bottom: 72px; }
+  h2 {
+    font-family: 'Cinzel', serif;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    padding-bottom: 14px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  h2::before {
+    content: attr(data-num);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+    color: var(--bone-faint);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+  }
+  h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--bone);
+  }
+  p { margin-bottom: 14px; color: var(--bone-dim); }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--bone); font-weight: 500; }
+  a { color: var(--gold); text-decoration: none; border-bottom: 1px dotted var(--gold); }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88em;
+    background: var(--bg-deep);
+    padding: 1px 6px;
+    border-radius: 2px;
+    color: var(--moss);
+  }
+
+  /* ===== Mapping table ===== */
+  .map {
+    display: grid;
+    grid-template-columns: 1fr 32px 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .map-row {
+    display: contents;
+  }
+  .map-row > div {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .map-row:last-child > div { border-bottom: none; }
+  .map-row > div:nth-child(1) {
+    background: var(--card);
+    border-right: 1px solid var(--border);
+  }
+  .map-row > div:nth-child(2) {
+    text-align: center;
+    color: var(--bone-faint);
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-deep);
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .map-row > div:nth-child(3) {
+    background: oklch(0.16 0.02 240);
+    border-left: 1px solid var(--border);
+  }
+  .map-row.header > div {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bone-faint);
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: var(--bg-deep) !important;
+  }
+  .map-row .label {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--bone);
+    margin-bottom: 4px;
+  }
+  .map-row .file {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--bone-faint);
+    word-break: break-all;
+  }
+
+  /* ===== File index ===== */
+  .files {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .file-card {
+    background: var(--card);
+    padding: 18px 20px;
+  }
+  .file-card .path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--godot);
+    margin-bottom: 6px;
+    word-break: break-all;
+  }
+  .file-card .desc {
+    font-size: 13px;
+    color: var(--bone-dim);
+    line-height: 1.5;
+  }
+
+  /* ===== Step list ===== */
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+  }
+  ol.steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 18px 20px 18px 70px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+  ol.steps li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 20px;
+    top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+  }
+  ol.steps li .step-title {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    color: var(--bone);
+    margin-bottom: 4px;
+  }
+  ol.steps li p {
+    font-size: 13px;
+    margin-bottom: 0;
+  }
+
+  /* ===== Tree / scene visual ===== */
+  pre.tree {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    padding: 22px 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.65;
+    color: var(--bone-dim);
+    overflow-x: auto;
+    border-left: 3px solid var(--godot);
+  }
+  pre.tree .node { color: var(--bone); }
+  pre.tree .script { color: var(--moss); }
+  pre.tree .group { color: var(--gold); font-style: italic; }
+  pre.tree .comment { color: var(--bone-faint); font-style: italic; }
+
+  /* ===== Callout boxes ===== */
+  .callout {
+    background: oklch(0.14 0.04 240);
+    border-left: 3px solid var(--godot);
+    padding: 16px 20px;
+    margin: 22px 0;
+    font-size: 14px;
+  }
+  .callout.warn {
+    background: oklch(0.16 0.06 25);
+    border-left-color: var(--cursed);
+  }
+  .callout .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--godot);
+    margin-bottom: 6px;
+  }
+  .callout.warn .label { color: var(--cursed); }
+
+  /* ===== Visual diagram (the big system map) ===== */
+  .diagram {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    padding: 40px 32px;
+    margin: 20px 0;
+  }
+  .diagram-grid {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 12px 0;
+    align-items: stretch;
+  }
+  .ds-box {
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    text-align: center;
+  }
+  .ds-box.js { border-left: 3px solid var(--gold); }
+  .ds-box.gd { border-left: 3px solid var(--godot); }
+  .ds-box .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--bone);
+  }
+  .ds-box .file {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--bone-faint);
+    margin-top: 4px;
+  }
+  .ds-arrow {
+    text-align: center;
+    color: var(--bone-faint);
+    align-self: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+  }
+  .ds-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--bone-faint);
+    padding-bottom: 14px;
+  }
+  .ds-header.js { color: var(--gold); }
+  .ds-header.gd { color: var(--godot); }
+
+  /* ===== Inline kbd ===== */
+  kbd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 2px;
+    color: var(--bone);
+  }
+
+  /* ===== TOC ===== */
+  .toc {
+    position: sticky;
+    top: 32px;
+    float: right;
+    width: 220px;
+    margin-left: 40px;
+    margin-bottom: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    line-height: 2.1;
+    border-left: 1px solid var(--border);
+    padding-left: 18px;
+  }
+  .toc a {
+    color: var(--bone-faint);
+    text-transform: uppercase;
+    display: block;
+    border: none;
+  }
+  .toc a:hover { color: var(--gold); }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  @media (max-width: 900px) {
+    .toc { display: none; }
+    h1 { font-size: 40px; }
+    .files, .grid-2 { grid-template-columns: 1fr; }
+    .diagram-grid { grid-template-columns: 1fr; }
+    .ds-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<aside class="toc">
+  <a href="#overview">Overview</a>
+  <a href="#map">System Map</a>
+  <a href="#files">File Index</a>
+  <a href="#setup">Setup Steps</a>
+  <a href="#scene">Scene Tree</a>
+  <a href="#deepdive">Deep Dives</a>
+  <a href="#gotchas">Gotchas</a>
+  <a href="#newer">Newer Systems</a>
+  <a href="#next">Next Steps</a>
+</aside>
+
+<header>
+  <div class="eyebrow">Engineering Handoff · For Godot 4.3+</div>
+  <h1>Humanity Contained<br><em>→ Godot Engine</em></h1>
+  <p class="lede">A complete porting kit for the prototype: GDScript ports of every system, Resource-driven content authoring (items, weapons, enemies, recipes), an iso math library, and a scene-tree blueprint you can recreate in the editor in under an hour.</p>
+  <p class="lede">The prototype was deliberately structured to match Godot idioms — autoload singletons, signal bus, Resource-based data, painter's sort by depth. Most files port 1-for-1.</p>
+</header>
+
+<!-- ============================================================ -->
+<section id="overview">
+<h2 data-num="01">Architecture overview</h2>
+
+<p>The Godot project follows the same shape as the JS prototype but uses native Godot idioms wherever they're stronger: <strong>autoload singletons</strong> for global state, <strong>Resources</strong> for data authoring, <strong>signals via an EventBus</strong> to keep systems decoupled, and a <strong>TileMapLayer</strong> for the iso ground.</p>
+
+<div class="diagram">
+  <div class="diagram-grid">
+    <div class="ds-header js">JavaScript prototype</div>
+    <div></div>
+    <div class="ds-header gd">Godot 4.3 port</div>
+
+    <div class="ds-box js"><div class="name">iso.js</div><div class="file">worldToScreen, isWalkable</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">IsoMath.gd</div><div class="file">static helpers + TileMapLayer iso</div></div>
+
+    <div class="ds-box js"><div class="name">render.js</div><div class="file">canvas painter sort</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">y_sort_enabled + z_index</div><div class="file">per-node painter sort</div></div>
+
+    <div class="ds-box js"><div class="name">items.js · ITEMS</div><div class="file">JS dict literal</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">Item / WeaponItem.tres</div><div class="file">Resource files in editor</div></div>
+
+    <div class="ds-box js"><div class="name">INVENTORY module</div><div class="file">closures + globals</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">Inventory autoload</div><div class="file">res://scripts/autoload/Inventory.gd</div></div>
+
+    <div class="ds-box js"><div class="name">entities.js · Player</div><div class="file">plain object + update fn</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">Player.gd</div><div class="file">CharacterBody2D + _physics_process</div></div>
+
+    <div class="ds-box js"><div class="name">entities.js · Enemy</div><div class="file">state machine in update fn</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">Enemy.gd + AI modules</div><div class="file">composed via EnemyData.ai_script</div></div>
+
+    <div class="ds-box js"><div class="name">render.js · genWorld</div><div class="file">imperative tile fill</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">WorldGen.gd</div><div class="file">TileMapLayer + instanced scenes</div></div>
+
+    <div class="ds-box js"><div class="name">ui.js · HUD + panels</div><div class="file">HTML overlay + listeners</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">HUD.gd + Panels</div><div class="file">CanvasLayer + Control nodes</div></div>
+
+    <div class="ds-box js"><div class="name">game.js · time loop</div><div class="file">requestAnimationFrame</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">GameState autoload + DayNight.gd</div><div class="file">_process + CanvasModulate</div></div>
+
+    <div class="ds-box js"><div class="name">UI events</div><div class="file">onAction callback</div></div>
+    <div class="ds-arrow">→</div>
+    <div class="ds-box gd"><div class="name">EventBus autoload</div><div class="file">named signals, type-safe</div></div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="label">Why this shape</div>
+  <p style="color: var(--bone)">The JS used <code>window.X</code> globals because there are no modules. Godot's autoloads are the exact same idea but native, hot-reloadable, and inspector-visible. The Resource-driven authoring means designers can add a new weapon by duplicating a <code>.tres</code> and tweaking fields — no code touched.</p>
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="map">
+<h2 data-num="02">System map</h2>
+
+<div class="map">
+  <div class="map-row header">
+    <div>Prototype concern</div>
+    <div>→</div>
+    <div>Godot home</div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Isometric math</div>
+      <div class="file">iso.js · worldToScreen / screenToWorld / facing</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">IsoMath helpers + TileMapLayer iso mode</div>
+      <div class="file">scripts/IsoMath.gd · static funcs only</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Player state &amp; movement</div>
+      <div class="file">entities.js · makePlayer / updatePlayer</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">CharacterBody2D + script</div>
+      <div class="file">scenes/Player.tscn · scripts/Player.gd</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Click-direction melee swing</div>
+      <div class="file">entities.js · doMelee + drawSwingArc</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">Player._melee_swing + IsoMath.in_arc</div>
+      <div class="file">VFX = Line2D arc in $SwingFX (tween)</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Ranged weapons (bow, staff, gun)</div>
+      <div class="file">entities.js · doRanged</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">Player._ranged_shoot + IsoMath.raycast_hit</div>
+      <div class="file">spawn projectile / Line2D fade</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Enemy AI (skeleton / wraith / ghoul)</div>
+      <div class="file">entities.js · updateEnemy</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">Enemy.gd + AI strategy modules</div>
+      <div class="file">scripts/AI/SkeletonAI.gd, WraithAI.gd, GhoulAI.gd</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Item catalog</div>
+      <div class="file">items.js · ITEMS dict</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">Item / WeaponItem Resources</div>
+      <div class="file">resources/items/*.tres</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Inventory grid + equipment slots</div>
+      <div class="file">items.js · INVENTORY module</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">Inventory autoload</div>
+      <div class="file">scripts/autoload/Inventory.gd</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Crafting recipes</div>
+      <div class="file">items.js · RECIPES + canCraft + craft</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">Recipe Resources + Recipe.craft()</div>
+      <div class="file">resources/recipes/*.tres · scripts/Recipe.gd</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Loot containers</div>
+      <div class="file">render.js · container props</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">Container scene (Prop subclass)</div>
+      <div class="file">scripts/Container.gd · scenes/props/Chest.tscn</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Tile world + structures</div>
+      <div class="file">iso.js · genWorld</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">WorldGen.gd + TileMapLayer + scenes</div>
+      <div class="file">scripts/WorldGen.gd</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Day/night cycle</div>
+      <div class="file">game.js · updateLightingOverlay</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">GameState.darkness() → CanvasModulate</div>
+      <div class="file">scripts/autoload/GameState.gd · scripts/DayNight.gd</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">HUD: bars, clock, hotbar, log, prompt</div>
+      <div class="file">ui.js + styles.css</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">CanvasLayer + Control tree</div>
+      <div class="file">scripts/HUD.gd · scenes/ui/HUD.tscn</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Minimap</div>
+      <div class="file">ui.js · drawMinimap (offscreen canvas)</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">SubViewport with top-down camera</div>
+      <div class="file">scenes/ui/Minimap.tscn</div>
+    </div>
+  </div>
+
+  <div class="map-row">
+    <div>
+      <div class="label">Global events / log lines</div>
+      <div class="file">ui.js · log() + onAction</div>
+    </div>
+    <div>→</div>
+    <div>
+      <div class="label">EventBus signals</div>
+      <div class="file">scripts/autoload/EventBus.gd</div>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="files">
+<h2 data-num="03">File index</h2>
+
+<p>What you'll find when you open <code>godot/</code> in the editor:</p>
+
+<div class="files">
+
+  <div class="file-card">
+    <div class="path">project.godot</div>
+    <div class="desc">Engine config: window size, autoloads, input map (WASD, MB1/2, E, TAB, C, 1–5), render layers. Drop the folder onto Godot's Project Manager and it'll pick this up.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/IsoMath.gd</div>
+    <div class="desc">Static helpers: <code>world_to_screen</code>, <code>screen_to_world</code>, <code>cursor_facing</code>, <code>in_arc</code> (the directional-swing check), <code>raycast_hit</code> (for ranged weapons). No state.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/autoload/EventBus.gd</div>
+    <div class="desc">Global signal hub. Emit from anywhere, listen from anywhere. Keeps Player ↔ HUD ↔ Inventory decoupled.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/autoload/GameState.gd</div>
+    <div class="desc">Time of day, day counter, phase enum, darkness curve, illuminate timer. Drives the day/night cycle.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/autoload/Inventory.gd</div>
+    <div class="desc">Player's pack: 32 slots, equipment dict (weapon/armor/shield/accessory), 5-slot hotbar with <code>-1</code> sentinel for "equipped weapon". API mirrors the JS module exactly.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/autoload/Database.gd</div>
+    <div class="desc">Loads all <code>.tres</code> files at startup and exposes <code>Database.item(&amp;"rusted_sword")</code>. No more hard-coded item IDs.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/Item.gd · WeaponItem.gd · Recipe.gd · EnemyData.gd</div>
+    <div class="desc">Resource classes. Each one corresponds to a category of <code>.tres</code> file. Editor-friendly with <code>@export</code> groups.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/Player.gd</div>
+    <div class="desc">CharacterBody2D script. Mirrors the JS player: WASD → iso velocity, mouse facing, click-attack with arc (or raycast for ranged), stamina/mana/hunger/thirst decay, iframes, blocking with shield, death.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/Enemy.gd + scripts/AI/*.gd</div>
+    <div class="desc">Base enemy class delegates per-frame decisions to its AI module (Strategy pattern). Skeleton (wander+chase), Wraith (ghost+drift), Ghoul (telegraph+swing). Add a new variant by writing a new AI script + EnemyData.tres.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/WorldGen.gd</div>
+    <div class="desc">Builds the 60×60 world at <code>_ready</code>: fills the TileMapLayer, carves the road, places cemetery/pond/houses, scatters props, spawns enemies. Seedable for repeatability.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/HUD.gd</div>
+    <div class="desc">CanvasLayer controller. Listens to EventBus and updates bars, clock, hotbar, log, prompt. Hides hunger/thirst/mana when not relevant.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/DayNight.gd</div>
+    <div class="desc">CanvasModulate script. Reads <code>GameState.darkness()</code> each frame and tints the world toward cold moonlight.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">scripts/Prop.gd · Container.gd</div>
+    <div class="desc">Static-body scenery. Damage-able. Containers extend Prop with <code>loot</code> + <code>opened</code> for chests/barrels/cars.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">resources/items/*.tres</div>
+    <div class="desc">6 starter items as templates: Rusted Sword, Silver Dagger (with bonus-vs-wraith), Oak Staff (mana cost), Service Pistol (ammo), Bandage (consumable), Rag (material). Duplicate one to make new weapons.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">resources/enemies/*.tres</div>
+    <div class="desc">Skeleton, Wraith, Ghoul with stats and AI script bound. Adding a new enemy = new EnemyData.tres pointing at a new AI script.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">resources/recipes/*.tres</div>
+    <div class="desc">Bandage recipe as a template (3 Rags → 1 Bandage). Add more by referencing other Item .tres files.</div>
+  </div>
+
+  <div class="file-card">
+    <div class="path">SCENE_TREE.md</div>
+    <div class="desc">Text blueprint of Main.tscn — the scene tree you need to build in the editor. Node names match @onready references in the scripts.</div>
+  </div>
+
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="setup">
+<h2 data-num="04">Setup steps</h2>
+
+<ol class="steps">
+  <li>
+    <div class="step-title">Open the folder in Godot 4.3+</div>
+    <p>Launch Godot, click <em>Import</em>, point at the <code>godot/</code> folder, and let it scan. Autoloads register automatically from <code>project.godot</code>. You'll see four scripts at the bottom of the Scene panel: <strong>GameState · Inventory · Database · EventBus</strong>.</p>
+  </li>
+  <li>
+    <div class="step-title">Build the TileSet for the ground</div>
+    <p>Create a 64×32 isometric TileSet. Add 11 atlas sources matching the <code>Tile</code> enum in WorldGen.gd: grass, grass_dark, moss, dirt, road, road_edge, sidewalk, floor_wood, floor_tile, water, grave. Use solid color rects to start — swap to real sprites later. Place a <strong>TileMapLayer</strong> in your scene with this TileSet, mode = Isometric.</p>
+  </li>
+  <li>
+    <div class="step-title">Create Player.tscn</div>
+    <p>CharacterBody2D root → attach <code>Player.gd</code> → add child Sprite2D ("Sprite"), Sprite2D ("WeaponSprite"), CollisionShape2D ("Collision", capsule ~24×12), Camera2D ("Camera", <em>current = true</em>), Node2D ("AimIndicator"). Add to group <code>player</code> in the inspector.</p>
+  </li>
+  <li>
+    <div class="step-title">Create Enemy.tscn</div>
+    <p>CharacterBody2D → <code>Enemy.gd</code> → assign <code>data</code> to one of the EnemyData .tres files. Children: Sprite (placeholder), Collision, and an empty Node called "AIHost". The base script applies the AI script automatically from data.ai_script. Add to group <code>enemy</code>.</p>
+  </li>
+  <li>
+    <div class="step-title">Create prop scenes</div>
+    <p>One scene each for Tree, DeadTree, Gravestone, Car, Barrel, Crate, Chest, Fence. Either StaticBody2D + <code>Prop.gd</code> (or <code>Container.gd</code> for loot ones). Sized 1×1 tile collision footprint. Add to group <code>prop</code>.</p>
+  </li>
+  <li>
+    <div class="step-title">Build Main.tscn</div>
+    <p>Follow the tree blueprint in <code>SCENE_TREE.md</code>. Drop a <strong>WorldGen</strong> node in and assign all the @export PackedScene fields to your scene files. The TileMapLayer + Structures/Props/Enemies/Drops Node2Ds get assigned to the WorldGen too. Add WorldGen to group <code>world_gen</code>.</p>
+  </li>
+  <li>
+    <div class="step-title">Build HUD.tscn</div>
+    <p>CanvasLayer with the children listed in SCENE_TREE.md. Use Control + ColorRect for the stat bars (HUD.gd drives <code>anchor_right</code> for the fill). RichTextLabel for the log with BBCode enabled. Hotbar = HBoxContainer with five PanelContainers.</p>
+  </li>
+  <li>
+    <div class="step-title">Equip starting items</div>
+    <p>In Main.gd's <code>_ready</code>, add starter items: <code>Inventory.add(Database.item(&amp;"rusted_sword"), 1)</code>, equip them, set hotbar slot 0 to <code>-1</code> (sentinel). Same pattern as the JS prototype's <code>game.js</code> startup block.</p>
+  </li>
+  <li>
+    <div class="step-title">Run it</div>
+    <p>F5 to play. WASD moves, mouse aims, LMB attacks in the cursor direction. The HUD updates from the EventBus.stats_changed signal each frame. Sleep, eat, swing, survive.</p>
+  </li>
+</ol>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="scene">
+<h2 data-num="05">Scene tree blueprint</h2>
+
+<pre class="tree"><span class="node">Main</span> (Node2D)
+├── <span class="node">World</span> (Node2D)
+│   ├── <span class="node">Ground</span> (TileMapLayer)            <span class="comment">; iso mode, 64×32, 11 sources</span>
+│   ├── <span class="node">Structures</span> (Node2D)              <span class="comment">; houses get instanced here</span>
+│   ├── <span class="node">Props</span> (Node2D)                   <span class="comment">; trees / cars / barrels / crate / chest</span>
+│   ├── <span class="node">Drops</span> (Node2D)                   <span class="comment">; ground-drop pickups</span>
+│   └── <span class="node">Enemies</span> (Node2D)                 <span class="comment">; spawned by WorldGen</span>
+├── <span class="node">WorldGen</span> (Node2D) <span class="script">[WorldGen.gd]</span>     <span class="group">@group: world_gen</span>
+├── <span class="node">Player</span> (CharacterBody2D) <span class="script">[Player.gd]</span>   <span class="group">@group: player</span>
+│   ├── <span class="node">Sprite</span> (AnimatedSprite2D)
+│   ├── <span class="node">WeaponSprite</span> (Sprite2D)
+│   ├── <span class="node">Collision</span> (CollisionShape2D)     <span class="comment">; capsule</span>
+│   ├── <span class="node">AimIndicator</span> (Node2D)
+│   │   └── <span class="node">Line2D</span>                       <span class="comment">; facing line</span>
+│   └── <span class="node">Camera</span> (Camera2D, current=true)
+├── <span class="node">CanvasModulate</span> <span class="script">[DayNight.gd]</span>
+└── <span class="node">HUD</span> (CanvasLayer) <span class="script">[HUD.gd]</span>
+    ├── <span class="node">StatsTL</span> (VBoxContainer)
+    │   ├── <span class="node">HP</span>      → Label · Bar/Fill · Value
+    │   ├── <span class="node">Stam</span>
+    │   ├── <span class="node">Mana</span>    <span class="comment">; visibility toggled</span>
+    │   ├── <span class="node">Hunger</span>
+    │   └── <span class="node">Thirst</span>
+    ├── <span class="node">Clock</span> (VBoxContainer)
+    │   ├── <span class="node">Time</span> · <span class="node">Day</span> · <span class="node">Phase</span>           <span class="comment">; Labels</span>
+    ├── <span class="node">Minimap</span> (SubViewportContainer)
+    ├── <span class="node">Hotbar</span> (HBoxContainer)
+    │   └── <span class="node">Slot1</span> … <span class="node">Slot5</span> (PanelContainer)
+    ├── <span class="node">Prompt</span> (Label)                   <span class="comment">; "Open chest · [E]"</span>
+    ├── <span class="node">Log</span> (RichTextLabel)              <span class="comment">; BBCode for severity colors</span>
+    ├── <span class="node">HurtFlash</span> (ColorRect)            <span class="comment">; full-screen, tween on hurt</span>
+    ├── <span class="node">Cursor</span> (Control)                 <span class="comment">; custom crosshair</span>
+    └── <span class="node">Panels</span> (Control)
+        ├── <span class="node">InventoryPanel</span>
+        ├── <span class="node">LootPanel</span>
+        └── <span class="node">CraftingPanel</span></pre>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="deepdive">
+<h2 data-num="06">Deep dives</h2>
+
+<div class="grid-2">
+  <div>
+    <h3>Directional attack arc</h3>
+    <p>In the JS prototype, each click computes the angle from player to cursor in world space, then for every enemy: check distance ≤ range, check angular delta ≤ arc/2. If both true → hit.</p>
+    <p>In Godot, this lives in <code>IsoMath.in_arc(origin, target, facing, range, arc)</code>. Player.gd calls it across the <code>enemy</code> group on each click. No physics shape — pure math. This is faster than swept hitboxes and trivially extends to wider/narrower weapon arcs.</p>
+  </div>
+  <div>
+    <h3>Painter sort for occlusion</h3>
+    <p>Iso rendering needs back-to-front draw order. In JS we sorted by <code>wx + wy</code> each frame. In Godot 4, set <code>y_sort_enabled = true</code> on the parent Node2D and Godot does it automatically. For tiles, the TileMapLayer y-sorts within itself.</p>
+    <p>For sprites whose center-of-mass doesn't match their feet, set <code>z_index</code> manually to <code>int(tile.x + tile.y)</code>. WorldGen.gd does this when instancing props.</p>
+  </div>
+  <div>
+    <h3>Resource-driven content</h3>
+    <p>In JS, adding a weapon meant editing <code>items.js</code>. In Godot, you duplicate <code>rusted_sword.tres</code>, change the fields in the Inspector, save under a new name. Database picks it up at startup.</p>
+    <p>This is the single biggest authoring win. Designers, modders, and tools can all create content without touching code.</p>
+  </div>
+  <div>
+    <h3>AI as composable strategies</h3>
+    <p>Each enemy archetype is an <code>EnemyData.tres</code> + a paired AI script. The base <code>Enemy.gd</code> handles physics and damage; the AI script implements <code>ai_tick(enemy, delta)</code>.</p>
+    <p>To add a Necromancer: write <code>NecromancerAI.gd</code> with a tick that summons skeleton scenes on cooldown, save <code>necromancer.tres</code> pointing at it. No subclassing required.</p>
+  </div>
+  <div>
+    <h3>Decoupled HUD</h3>
+    <p>The HUD only reads from EventBus signals — never reaches into the Player node. When the Player loses HP, it emits <code>player_hurt</code>; HUD listens and updates the bar and triggers the hurt flash tween.</p>
+    <p>This means audio, screen shake, controller rumble, or accessibility readouts can all hook the same signals without touching combat code.</p>
+  </div>
+  <div>
+    <h3>Day/night as a curve</h3>
+    <p>GameState.darkness() returns 0..1 based on hour-of-day. CanvasModulate lerps its color toward a cold-blue night tint each frame. Spell-of-Light just sets a timestamp that the darkness function multiplies by 0.2 until expiry.</p>
+    <p>For real shadow casting later, swap CanvasModulate for a <code>WorldEnvironment</code> 2D or a CanvasItemMaterial shader with point lights.</p>
+  </div>
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="gotchas">
+<h2 data-num="07">Gotchas &amp; design notes</h2>
+
+<div class="callout warn">
+  <div class="label">Iso velocity is screen-space</div>
+  <p style="color: var(--bone)">In Player.gd, WASD produces a tile-space direction, then <code>IsoMath.world_to_screen(dir) * speed</code> converts to pixels/sec for <code>move_and_slide()</code>. If you skip the conversion the player will drift diagonally in the wrong direction. Don't refactor this without keeping the iso transform.</p>
+</div>
+
+<div class="callout warn">
+  <div class="label">Wall collision needs collision polys, not just floor tiles</div>
+  <p style="color: var(--bone)">The JS prototype fakes wall collision by checking distance from each structure's wall edges. In Godot, give each house scene actual <code>StaticBody2D</code> children for its four wall segments, with a gap for the door. Cleaner than ported edge-checks and free physics.</p>
+</div>
+
+<div class="callout">
+  <div class="label">TileMapLayer (4.3+) vs TileMap (4.2)</div>
+  <p style="color: var(--bone)">WorldGen.gd is written against the newer <code>TileMapLayer</code>. If you're on 4.2, swap to <code>TileMap</code> and adjust the <code>set_cell</code> calls (add a layer argument).</p>
+</div>
+
+<div class="callout">
+  <div class="label">Drop spawn currently emits a placeholder signal</div>
+  <p style="color: var(--bone)">Enemy.gd's <code>_drop_loot</code> stub needs a Drop scene to instance. Create <code>scenes/Drop.tscn</code> (Area2D + Sprite2D + a <code>tile_pos</code>, <code>item</code>, <code>qty</code>) and have <code>WorldGen.spawn_drop</code> instance it. The commented line in the script shows the call site.</p>
+</div>
+
+<div class="callout">
+  <div class="label">Ranged VFX</div>
+  <p style="color: var(--bone)">Player._ranged_shoot currently resolves damage instantly without a visible projectile. For bullets/arrows/spell bolts, spawn a Line2D child that tweens its alpha over ~90ms. For spell bolts make it violet (mana hue from the prototype palette).</p>
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="newer">
+<h2 data-num="08">Newer systems</h2>
+
+<p>These were added after the initial handoff. Same idioms — Resources for data, signals for cross-system events, AI as composable modules.</p>
+
+<h3 style="margin-top:30px">Enemy variety + faction-based targeting</h3>
+<p>The prototype now has six enemy archetypes split across two factions, plus civilians as a third faction. Targeting is driven by a hostility matrix — each entity picks the closest target whose faction is on its hostile list.</p>
+
+<div class="diagram" style="margin-bottom:20px">
+  <table style="width:100%; border-collapse:collapse; font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--bone)">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--bone-faint); font-size:10px; letter-spacing:0.15em">
+        <th style="text-align:left; padding:10px">FACTION</th>
+        <th style="text-align:left; padding:10px">MEMBERS</th>
+        <th style="text-align:left; padding:10px">TARGETS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding:8px 10px; color:var(--cursed)">monster</td>       <td style="padding:8px 10px">skeleton, wraith, ghoul, cultist</td>   <td style="padding:8px 10px">player + human_hostile + civilian</td></tr>
+      <tr><td style="padding:8px 10px; color:var(--gold)">human_hostile</td>   <td style="padding:8px 10px">bandit, guard</td>                       <td style="padding:8px 10px">player + monster + civilian</td></tr>
+      <tr><td style="padding:8px 10px; color:var(--moss)">civilian</td>         <td style="padding:8px 10px">NPCs</td>                                  <td style="padding:8px 10px">— (flees instead of attacks)</td></tr>
+      <tr><td style="padding:8px 10px">player</td>                              <td style="padding:8px 10px">you</td>                                   <td style="padding:8px 10px">explicit click only</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout">
+  <div class="label">Godot port — Faction resource + targeting</div>
+  <p style="color: var(--bone)">Add a <code>Faction.gd</code> Resource with an <code>@export var hostile_to: Array[StringName]</code>. Each enemy's <code>EnemyData.tres</code> gets a <code>faction</code> field pointing at a <code>Faction</code>. In <code>Enemy.gd</code>, replace the direct <code>player</code> reference with a <code>find_target()</code> helper that scans the <code>player</code>, <code>enemy</code>, and <code>civilian</code> groups for the closest hostile. The AI modules call <code>find_target()</code> once per tick instead of hardcoding <code>e.player</code>.</p>
+</div>
+
+<h3 style="margin-top:30px">New enemy archetypes</h3>
+<div class="files" style="grid-template-columns: 1fr 1fr 1fr">
+  <div class="file-card">
+    <div class="path">cultist.tres</div>
+    <div class="desc">28 HP, magic caster. Stays at 7-tile range, fires cold-flame bolts (16 dmg, 1.8s CD). Charges glowing fingertips before each cast. Drops wraith ash + occasional mana potion.</div>
+  </div>
+  <div class="file-card">
+    <div class="path">bandit.tres</div>
+    <div class="desc">55 HP, pistol + 8 starting rounds. Maintains ~4.5-tile distance. Out of ammo: 55% chance to flee, else draws a knife. Drops pistol rounds.</div>
+  </div>
+  <div class="file-card">
+    <div class="path">guard.tres</div>
+    <div class="desc">95 HP, shotgun + 6 shells (heavy spread). Holds ~3-tile range. Never flees — out of ammo means draws a longblade and charges. Drops shells + sometimes chainmail.</div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="label">Godot port — ammo + fallback AI</div>
+  <p style="color: var(--bone)">Extend <code>EnemyData</code> with: <code>ranged_dmg</code>, <code>ranged_range</code>, <code>ranged_cooldown_ms</code>, <code>start_ammo</code>, <code>flee_when_out_chance</code>, <code>has_melee</code>, <code>keep_distance_tiles</code>. The AI module (e.g. <code>BanditAI.gd</code>) decides on the first frame after ammo hits zero — flee vs draw a blade. Store the decision in <code>e._ammo_decision_made</code> so it sticks. For the shot itself: spawn a Line2D between enemy and target with a tween that fades alpha to zero in ~110ms.</p>
+</div>
+
+<h3 style="margin-top:30px">Civilians + dialogue</h3>
+<p>Civilians are a separate node group, not enemies. They wander a home radius, flee from hostile factions within sight, and can be talked to with <code>E</code>. Each carries a name, a role ("baker", "caretaker", "fisher"…), and a few dialogue lines.</p>
+
+<pre class="tree"><span class="node">Civilian</span> (CharacterBody2D) <span class="script">[Civilian.gd]</span>     <span class="group">@group: civilian</span>
+├── <span class="node">Sprite</span> / <span class="node">Model3D</span>            <span class="comment">; 2D placeholder or 3D model</span>
+├── <span class="node">Collision</span>
+├── <span class="node">DialogueComponent</span>           <span class="comment">; holds lines + name + role</span>
+└── <span class="node">FleeBehavior</span>                <span class="comment">; computes flee vector from hostile groups</span></pre>
+
+<p>Dialogue UI is a CanvasLayer panel (Control) anchored bottom-center. Clicking or pressing SPACE advances; the last line closes. While open, the player's attack input is gated.</p>
+
+<div class="callout">
+  <div class="label">Godot port — dialogue Resource</div>
+  <p style="color: var(--bone)">Create <code>Dialogue.gd</code> Resource with <code>@export var npc_name: String</code>, <code>@export var role: String</code>, <code>@export var lines: PackedStringArray</code>. Each civilian scene exports a Dialogue resource. A global <code>DialogueController.gd</code> autoload manages the open/advance/close state and emits <code>EventBus.dialogue_opened</code> / <code>dialogue_advanced</code> / <code>dialogue_closed</code>.</p>
+</div>
+
+<h3 style="margin-top:30px">Building lighting + window glow</h3>
+<p>Each structure gets a <code>lit</code> boolean at world-gen (~45% chance). Lit buildings render warm amber window panes; dark buildings render cold-blue panes. A "light switch" prop next to each entrance toggles the state with <code>E</code>.</p>
+
+<div class="callout">
+  <div class="label">Godot port — per-building light</div>
+  <p style="color: var(--bone)">Each <code>House.tscn</code> instance has a <code>lit</code> property and a child <code>WindowLights</code> Node2D holding <code>Light2D</code> emitters at each window. Toggle <code>WindowLights.visible</code> based on <code>lit</code>. The light switch is a separate scene that exports the parent house ref and toggles it on <code>E</code>. Use <code>Light2D.energy</code> tweens for the flicker-on effect.</p>
+</div>
+
+<h3 style="margin-top:30px">Vision cone in dark interiors</h3>
+<p>When the player is inside an unlit building, a fullscreen dark overlay covers everything except a ~70° cone forward of the player's facing, plus a tiny halo at the feet. Cone direction is computed in screen-space (the world-facing angle is iso-projected).</p>
+
+<div class="callout">
+  <div class="label">Godot port — vision cone via Light2D</div>
+  <p style="color: var(--bone)">This is the cleanest 2D Godot pattern: a <code>CanvasModulate</code> over the whole scene set to near-black when the player is in a dark structure, and a child <code>Light2D</code> on the player with a custom cone-shaped texture (an alpha gradient inside a wedge). Energy and rotation track <code>player.facing</code>. For 2D inside a 3D character setup, use a <code>Light3D</code> SpotLight on the player and an unlit ambient when inside dark buildings — same idea, native primitives.</p>
+</div>
+
+<h3 style="margin-top:30px">Doors — open/close + multi-room buildings</h3>
+<p>Every house has a main door on its south wall; bigger houses also have an interior dividing wall with an interior door. Both start closed, block movement when closed, and toggle with <code>E</code> when the player is adjacent. The prompt updates ("Open door" / "Close door") based on state.</p>
+
+<pre class="tree"><span class="node">House</span> (Node2D)
+├── <span class="node">Floor</span> (Sprite2D / TileMap chunk)
+├── <span class="node">Walls</span> (Node2D)
+│   ├── <span class="node">NorthWall</span> (StaticBody2D + CollisionShape2D)
+│   ├── <span class="node">SouthWall</span> (broken by door gap)
+│   ├── <span class="node">EastWall</span> · <span class="node">WestWall</span>
+│   └── <span class="node">InteriorWall</span> (optional, also broken by interior door)
+├── <span class="node">MainDoor</span> (Area2D + Sprite + Collision) <span class="script">[Door.gd]</span>
+├── <span class="node">InteriorDoor</span> (optional)
+├── <span class="node">LightSwitch</span> (Area2D) <span class="script">[LightSwitch.gd]</span>
+├── <span class="node">WindowLights</span> (Node2D w/ Light2Ds)
+└── <span class="node">lit</span>: bool, <span class="node">interior</span>: bool        <span class="comment">; @exports on House.gd</span></pre>
+
+<div class="callout">
+  <div class="label">Godot port — door interaction</div>
+  <p style="color: var(--bone)">Each <code>Door.gd</code> exposes <code>is_open: bool</code> and a <code>toggle()</code> method. Use an Area2D for proximity detection (<code>body_entered</code> sets the player's nearest_door); on <code>E</code>, the player calls <code>nearest_door.toggle()</code>. CollisionShape2D's <code>disabled</code> property toggles in lockstep with <code>is_open</code> so movement clears the gap when open.</p>
+</div>
+
+<h3 style="margin-top:30px">3D characters in a 2.5D world</h3>
+<p>The world stays 2D (TileMapLayer iso). Characters become 3D models in a parallel Node3D scene, rendered via a SubViewport composited over the 2D world, OR you go fully 3D with an orthographic camera angled to mimic iso.</p>
+
+<div class="callout warn">
+  <div class="label">Two viable mixing strategies</div>
+  <p style="color: var(--bone); margin-bottom: 8px"><strong>Option A — 2D world + Sprite3D characters (recommended for prototypes):</strong> Keep the TileMapLayer scene. Render characters as <code>Sprite3D</code> nodes with billboarding off (so they rotate naturally), or as full <code>MeshInstance3D</code>s, inside a SubViewport. Composite the viewport's texture onto the 2D scene via a <code>SubViewportContainer</code>. Cheap to set up, looks great with iso.</p>
+  <p style="color: var(--bone)"><strong>Option B — Fully 3D scene with orthographic camera:</strong> Build the world as a flat 3D plane with TileMap-style instancing of tile meshes. Use a <code>Camera3D</code> in orthographic mode at the iso angle (atan(0.5) pitch, 45° yaw). Characters are 3D models in the same scene. Heavier but unifies everything — better for production.</p>
+</div>
+
+<h3 style="margin-top:30px">Faction combat — humans fighting monsters</h3>
+<p>Because targeting is faction-driven, bandits and guards now shoot at skeletons/wraiths/cultists in line of sight, and monsters maul humans. The player can stand back and watch a firefight resolve. Civilians caught in the middle die quickly — they're fragile and don't fight back.</p>
+
+<div class="callout">
+  <div class="label">Godot port — group-based combat</div>
+  <p style="color: var(--bone)">Add each entity to the right Godot group: <code>add_to_group("monster")</code>, <code>add_to_group("human_hostile")</code>, <code>add_to_group("civilian")</code>. The <code>find_target()</code> helper iterates the relevant groups using <code>get_tree().get_nodes_in_group()</code> instead of a single <code>player</code> reference. Apply damage through a shared <code>Damageable</code> interface (a script that all damage-takers extend, or a duck-typed <code>take_damage(amount, source)</code> method).</p>
+</div>
+
+</section>
+<!-- ============================================================ -->
+<section id="next">
+<h2 data-num="09">Suggested next steps</h2>
+
+<div class="grid-2">
+  <div>
+    <h3>Week 1 — Get it moving</h3>
+    <p>Tilesets with colored rects → Player.tscn → Enemy.tscn → Main.tscn → run. Goal: WASD around, click to swing, watch a skeleton die. No real sprites yet.</p>
+  </div>
+  <div>
+    <h3>Week 2 — UI hookup</h3>
+    <p>Build HUD.tscn, wire stats_changed signal, get the bars updating. Add inventory panel — TAB toggles it. Wire click-to-equip. Most logic already exists in Inventory autoload.</p>
+  </div>
+  <div>
+    <h3>Week 3 — Real art</h3>
+    <p>Replace placeholder sprites with your 2.5D art. The Player.gd <code>WeaponSprite</code> child is already there for swappable weapon overlays.</p>
+  </div>
+  <div>
+    <h3>Week 4 — Polish &amp; content</h3>
+    <p>Audio (hit thuds, ambient wind, distant moans), wall occlusion fade-out for buildings the camera is behind, more enemy archetypes, save/load via ResourceSaver.</p>
+  </div>
+</div>
+
+<hr>
+
+<p style="text-align:center; color: var(--bone-faint); font-family:'Cinzel', serif; font-style:italic; font-size: 14px;">The veil is thin tonight. Build well.</p>
+
+</section>
+
+</div>
+
+</body>
+</html>

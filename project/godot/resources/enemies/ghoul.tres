@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/EnemyData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/AI/GhoulAI.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"ghoul"
+display_name = "Ghoul"
+max_hp = 65.0
+move_speed_tiles = 1.5
+damage = 14.0
+attack_range = 1.0
+attack_cooldown_ms = 1400
+sight_range_tiles = 9.0
+ghost = false
+ai_script = ExtResource("2")

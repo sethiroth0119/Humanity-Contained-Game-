@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="WeaponItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponItem.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"service_pistol"
+display_name = "Service Pistol"
+description = "Modern steel. Limited shells."
+kind = 3
+stack = 1
+shape = 6               ; PISTOL
+damage = 22.0
+attack_range = 9.0
+cooldown_ms = 350
+ranged = true
+ammo_id = &"pistol_round"

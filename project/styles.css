@@ -1,0 +1,1229 @@
+/* Humanity Contained — fantasy survival prototype */
+
+:root {
+  --bone: oklch(0.92 0.01 90);
+  --bone-dim: oklch(0.75 0.01 90);
+  --bone-faint: oklch(0.55 0.01 90);
+  --asphalt: oklch(0.22 0.01 250);
+  --asphalt-deep: oklch(0.14 0.01 250);
+  --asphalt-deeper: oklch(0.08 0.005 250);
+  --grass: oklch(0.42 0.04 130);
+  --grass-dark: oklch(0.30 0.04 130);
+  --moss: oklch(0.50 0.05 130);
+  --cursed: oklch(0.55 0.18 25);
+  --cursed-dim: oklch(0.40 0.12 25);
+  --moonlight: oklch(0.65 0.06 240);
+  --moonlight-dim: oklch(0.40 0.06 240);
+  --blood: oklch(0.40 0.15 20);
+  --gold: oklch(0.75 0.10 85);
+  --mana: oklch(0.65 0.12 280);
+  --stamina: oklch(0.65 0.10 130);
+  --hunger: oklch(0.65 0.10 60);
+  --thirst: oklch(0.65 0.10 220);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: var(--bone);
+  font-family: 'Inter', system-ui, sans-serif;
+  user-select: none;
+  cursor: none;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  background: var(--asphalt-deeper);
+}
+
+#world {
+  position: absolute;
+  inset: 0;
+  display: block;
+  image-rendering: crisp-edges;
+}
+
+/* Custom crosshair cursor */
+#cursor {
+  position: fixed;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  z-index: 1000;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: difference;
+}
+#cursor::before, #cursor::after {
+  content: '';
+  position: absolute;
+  background: var(--bone);
+}
+#cursor::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+#cursor::after  { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+#cursor .ring {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--bone);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+
+/* ===== HUD ===== */
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hud-corner-tl {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 240px;
+}
+
+.stat-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+}
+.stat-bar .label {
+  width: 56px;
+  text-align: left;
+  opacity: 0.7;
+}
+.stat-bar .track {
+  flex: 1;
+  height: 6px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+  overflow: hidden;
+}
+.stat-bar .fill {
+  height: 100%;
+  background: var(--bone);
+  transition: width 0.25s ease;
+}
+.stat-bar.hp .fill { background: var(--cursed); }
+.stat-bar.stam .fill { background: var(--stamina); }
+.stat-bar.hung .fill { background: var(--hunger); }
+.stat-bar.thir .fill { background: var(--thirst); }
+.stat-bar.mana .fill { background: var(--mana); }
+.stat-bar .val {
+  font-size: 9px;
+  width: 36px;
+  text-align: right;
+  opacity: 0.6;
+}
+
+/* Hide hunger/thirst/mana until urgent or relevant */
+.stat-bar.hidden { display: none; }
+
+/* ===== Top-right: clock + day ===== */
+.hud-corner-tr {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--bone-dim);
+}
+.hud-corner-tr .time {
+  font-size: 22px;
+  letter-spacing: 0.06em;
+}
+.hud-corner-tr .day {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+.hud-corner-tr .phase {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 6px;
+  color: var(--moonlight);
+  opacity: 0.85;
+}
+
+/* ===== Minimap ===== */
+#minimap {
+  position: absolute;
+  top: 110px;
+  right: 18px;
+  width: 160px;
+  height: 160px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+#minimap canvas { width: 100%; height: 100%; display: block; }
+
+/* ===== Bottom: hotbar ===== */
+.hud-bottom {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+#hotbar {
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+.slot {
+  width: 56px;
+  height: 56px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+}
+.slot.active {
+  border-color: var(--bone);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 0 18px rgba(255,255,255,0.08);
+}
+.slot .key {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  font-size: 9px;
+  opacity: 0.5;
+}
+.slot .qty {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  font-size: 10px;
+  opacity: 0.75;
+}
+.slot .item {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: var(--bone);
+  padding: 0 4px;
+  line-height: 1.1;
+}
+.slot.empty .item { opacity: 0.2; }
+
+/* ===== Message log ===== */
+#log {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  width: 360px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 4px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--bone-dim);
+  pointer-events: none;
+  max-height: 200px;
+  overflow: hidden;
+}
+#log .line {
+  opacity: 0;
+  transform: translateY(4px);
+  animation: logIn 0.4s forwards, logFade 0.4s 6s forwards;
+  letter-spacing: 0.02em;
+}
+#log .line.warn { color: var(--cursed); }
+#log .line.dim  { color: var(--bone-faint); font-style: italic; }
+#log .line.good { color: var(--moss); }
+@keyframes logIn  { to { opacity: 1; transform: translateY(0); } }
+@keyframes logFade { to { opacity: 0; } }
+
+/* ===== Interaction prompt ===== */
+#prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 110px;
+  transform: translateX(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--bone);
+  background: rgba(0,0,0,0.6);
+  padding: 8px 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+#prompt.show { opacity: 1; }
+#prompt b { color: var(--gold); font-weight: 500; }
+
+/* ===== Panel (inventory / crafting / loot) ===== */
+.panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(8,10,14,0.96);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--bone);
+  pointer-events: auto;
+  display: none;
+  z-index: 50;
+  backdrop-filter: blur(2px);
+}
+.panel.show { display: block; }
+.panel-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.panel-header .close {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+  cursor: pointer;
+}
+.panel-header .close:hover { opacity: 1; }
+
+/* Inventory layout */
+#inventory.panel {
+  width: 680px;
+  padding-bottom: 16px;
+}
+.inv-body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 20px;
+  padding: 18px 20px;
+}
+.equip-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.equip-col h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+.equip-slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+}
+.equip-slot:hover { border-color: rgba(255,255,255,0.18); }
+.equip-slot .box {
+  width: 32px;
+  height: 32px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  opacity: 0.4;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.equip-slot.filled .box {
+  opacity: 1;
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.18);
+}
+.equip-slot .info { font-family: 'Cinzel', serif; font-size: 12px; }
+.equip-slot .info small {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  opacity: 0.45;
+  margin-top: 2px;
+}
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 52px);
+  grid-auto-rows: 52px;
+  gap: 4px;
+}
+.inv-cell {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  line-height: 1.1;
+  padding: 2px;
+}
+.inv-cell:hover { border-color: rgba(255,255,255,0.25); }
+.inv-cell.empty { color: transparent; }
+.inv-cell .qty {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  opacity: 0.65;
+}
+
+/* Loot panel */
+#loot.panel { width: 460px; }
+.loot-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; }
+.loot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  cursor: pointer;
+}
+.loot-row:hover { border-color: var(--gold); color: var(--gold); }
+.loot-row .qty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  opacity: 0.55;
+}
+.loot-empty {
+  padding: 30px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  color: var(--bone-faint);
+  font-size: 13px;
+}
+
+/* Crafting */
+#crafting.panel { width: 560px; }
+.craft-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; }
+.recipe {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+}
+.recipe.locked { opacity: 0.35; cursor: not-allowed; }
+.recipe:not(.locked):hover { border-color: var(--gold); }
+.recipe .name { font-family: 'Cinzel', serif; font-size: 13px; }
+.recipe .reqs { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; opacity: 0.55; }
+.recipe .action {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+}
+.recipe:not(.locked):hover .action { color: var(--gold); }
+
+/* Tooltip */
+#tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: rgba(8,10,14,0.97);
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 8px 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--bone);
+  z-index: 200;
+  display: none;
+  max-width: 240px;
+}
+#tooltip .name { font-size: 13px; }
+#tooltip .meta { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; opacity: 0.55; margin-top: 4px; text-transform: uppercase; }
+#tooltip .desc { font-style: italic; opacity: 0.7; margin-top: 6px; font-size: 11px; line-height: 1.4; }
+
+/* Floating damage numbers */
+.dmg {
+  position: absolute;
+  pointer-events: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cursed);
+  text-shadow: 0 1px 2px #000;
+  animation: dmgFloat 0.8s forwards;
+  z-index: 5;
+}
+.dmg.heal { color: var(--moss); }
+@keyframes dmgFloat {
+  0% { opacity: 0; transform: translate(-50%, 0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -32px); }
+}
+
+/* Vignette + atmosphere overlays */
+#vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center,
+    transparent 30%,
+    rgba(0,0,0,0.45) 80%,
+    rgba(0,0,0,0.85) 100%);
+  z-index: 5;
+}
+#night-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: oklch(0.15 0.04 240 / 0);
+  transition: background 2s;
+  z-index: 4;
+  mix-blend-mode: multiply;
+}
+
+/* Title splash */
+#splash {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  color: var(--bone);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: opacity 1.2s;
+}
+#splash.gone { opacity: 0; pointer-events: none; }
+#splash h1 {
+  font-family: 'Cinzel', serif;
+  font-weight: 400;
+  font-size: 56px;
+  letter-spacing: 0.3em;
+  margin-bottom: 18px;
+}
+#splash .sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 60px;
+}
+#splash .start {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  border: 1px solid var(--bone);
+  padding: 12px 32px;
+  cursor: pointer;
+  color: var(--bone);
+  background: transparent;
+  transition: all 0.3s;
+}
+#splash .start:hover {
+  background: var(--bone);
+  color: #000;
+}
+#splash .splash-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+#splash .ghost {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 12px 24px;
+  cursor: pointer;
+  color: var(--bone-dim);
+  background: transparent;
+  transition: all 0.3s;
+}
+#splash .ghost:hover {
+  border-color: var(--bone);
+  color: var(--bone);
+}
+#splash .hints {
+  margin-top: 50px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--bone-faint);
+  line-height: 1.9;
+}
+#splash .hints kbd {
+  color: var(--bone);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 1px 6px;
+  margin: 0 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Health flash when hit */
+#hurt-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, oklch(0.4 0.18 25 / 0.6) 100%);
+  opacity: 0;
+  z-index: 6;
+}
+#hurt-flash.on { animation: hurt 0.4s; }
+@keyframes hurt { 0%, 100% { opacity: 0; } 30% { opacity: 1; } }
+
+/* Death overlay */
+#death {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  color: var(--bone);
+  z-index: 900;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+#death.show { display: flex; }
+#death h2 {
+  font-family: 'Cinzel', serif;
+  font-weight: 400;
+  font-size: 64px;
+  letter-spacing: 0.4em;
+  color: var(--cursed-dim);
+  margin-bottom: 20px;
+}
+#death p {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--bone-faint);
+  margin-bottom: 40px;
+  letter-spacing: 0.1em;
+}
+#death button {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--bone-faint);
+  color: var(--bone);
+  padding: 10px 28px;
+  cursor: pointer;
+}
+#death button:hover { border-color: var(--bone); }
+
+/* =========================================================
+   Dialogue panel — speaks to civilians
+   ========================================================= */
+#dialogue {
+  position: fixed;
+  left: 50%;
+  bottom: 100px;
+  transform: translateX(-50%);
+  width: min(720px, 90vw);
+  background: rgba(8,10,14,0.96);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--bone);
+  pointer-events: auto;
+  z-index: 800;
+  display: none;
+  cursor: pointer;
+  backdrop-filter: blur(3px);
+}
+#dialogue.show { display: block; }
+.dialogue-inner { padding: 20px 28px; }
+#dialogue .speaker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+#dialogue .line {
+  font-family: 'Cinzel', serif;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--bone);
+  letter-spacing: 0.02em;
+  text-wrap: pretty;
+  min-height: 50px;
+}
+#dialogue .dialogue-foot {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--bone-faint);
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   Character Creator (Traits + Sprites)
+   ========================================================= */
+#creator {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  overflow: auto;
+}
+#creator.show { display: flex; }
+
+.creator-panel {
+  width: 100%;
+  max-width: 1080px;
+  max-height: 92vh;
+  background: oklch(0.10 0.005 250);
+  border: 1px solid rgba(255,255,255,0.10);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.creator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 22px 28px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.creator-header .eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  margin-bottom: 6px;
+}
+.creator-header h2 {
+  font-family: 'Cinzel', serif;
+  font-weight: 400;
+  font-size: 24px;
+  letter-spacing: 0.12em;
+}
+.creator-close {
+  background: transparent;
+  border: none;
+  color: var(--bone-faint);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+}
+.creator-close:hover { color: var(--bone); }
+.creator-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.creator-tab {
+  background: transparent;
+  border: none;
+  color: var(--bone-faint);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 14px 18px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.creator-tab.active {
+  color: var(--bone);
+  border-bottom-color: var(--gold);
+}
+.creator-tab:hover { color: var(--bone); }
+
+.creator-body {
+  flex: 1;
+  overflow: auto;
+  padding: 24px 28px;
+}
+.creator-footer {
+  padding: 18px 28px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: oklch(0.08 0.005 250);
+}
+.creator-actions { display: flex; gap: 10px; }
+.creator-actions .primary,
+.creator-actions .ghost {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--bone);
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: all 0.2s;
+}
+.creator-actions .primary {
+  border-color: var(--bone);
+  background: var(--bone);
+  color: #000;
+}
+.creator-actions .primary:hover { background: var(--gold); border-color: var(--gold); }
+.creator-actions .primary:disabled {
+  background: transparent;
+  color: var(--bone-faint);
+  border-color: rgba(255,255,255,0.1);
+  cursor: not-allowed;
+}
+.creator-actions .ghost:hover {
+  border-color: var(--bone);
+}
+
+/* ---------- Traits tab ---------- */
+.trait-intro p {
+  color: var(--bone-dim);
+  font-size: 13px;
+  margin-bottom: 18px;
+  font-style: italic;
+  max-width: 720px;
+  line-height: 1.6;
+}
+.trait-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.trait-col h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  font-weight: 400;
+  margin-bottom: 12px;
+}
+.trait-col h3 .hint { opacity: 0.5; margin-left: 8px; text-transform: none; }
+.trait-card {
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.trait-card:hover { border-color: rgba(255,255,255,0.25); }
+.trait-card.selected.good {
+  background: oklch(0.20 0.06 130 / 0.5);
+  border-color: var(--moss);
+}
+.trait-card.selected.bad {
+  background: oklch(0.20 0.10 25 / 0.5);
+  border-color: var(--cursed);
+}
+.trait-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.trait-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: var(--bone);
+}
+.trait-cost {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--bone-faint);
+}
+.trait-card.good .trait-cost { color: var(--moss); }
+.trait-card.bad .trait-cost { color: var(--cursed); }
+.trait-desc {
+  font-size: 12px;
+  color: var(--bone-dim);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Footer cost meter */
+.cost-meter {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.cost-meter .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+}
+.cost-meter .val {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  font-weight: 500;
+}
+.cost-meter.ok .val { color: var(--moss); }
+.cost-meter.bad .val { color: var(--cursed); }
+.cost-meter .hint {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--bone-faint);
+}
+
+/* ---------- Past Life tab ---------- */
+.job-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.job-card {
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.job-card:hover { border-color: rgba(255,255,255,0.22); }
+.job-card.selected {
+  background: oklch(0.16 0.04 240 / 0.6);
+  border-color: var(--gold);
+}
+.job-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.job-name {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  color: var(--bone);
+  letter-spacing: 0.04em;
+}
+.job-sel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+}
+.job-tag {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--bone-dim);
+  line-height: 1.4;
+}
+.job-era {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+}
+.job-starter {
+  font-size: 11px;
+  color: var(--bone-dim);
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.job-starter .lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  flex-shrink: 0;
+}
+.job-starter .val {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+}
+.job-effects {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.job-effects .perk { color: var(--moss); }
+.job-effects .drawback { color: var(--cursed); }
+
+/* ---------- Sprite checkbox row ---------- */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--bone);
+  cursor: pointer;
+}
+.checkbox-row input { accent-color: var(--gold); }
+.checkbox-row .hint {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--bone-faint);
+}
+
+/* ---------- Walk preview ---------- */
+.walk-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.walk-dir-picks {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+.walk-dir-pick {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--bone-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  padding: 6px 4px;
+  cursor: pointer;
+  text-align: center;
+}
+.walk-dir-pick:hover { border-color: rgba(255,255,255,0.3); color: var(--bone); }
+.walk-dir-pick.active { border-color: var(--gold); color: var(--gold); }
+#walk-preview-canvas {
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  image-rendering: pixelated;
+  align-self: center;
+}
+
+/* ---------- Sprites tab ---------- */
+.sprite-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+}
+.sprite-sidebar h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+.slot-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  color: var(--bone);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.slot-btn:hover { border-color: rgba(255,255,255,0.22); }
+.slot-btn.active { border-color: var(--gold); background: rgba(255,215,150,0.05); }
+.slot-btn.loaded { background: rgba(120,200,140,0.05); }
+.slot-btn .slot-label {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.slot-btn .slot-desc {
+  font-size: 10px;
+  color: var(--bone-faint);
+  font-style: italic;
+  line-height: 1.4;
+}
+.slot-btn .slot-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  margin-top: 4px;
+  color: var(--bone-faint);
+}
+.slot-btn.loaded .slot-status { color: var(--moss); }
+
+.sprite-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.upload-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--bone);
+  border: 1px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+}
+.upload-btn:hover { border-color: var(--gold); color: var(--gold); }
+.upload-current {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--bone-faint);
+}
+
+.sprite-config {
+  margin-bottom: 18px;
+}
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.num-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.num-field .lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+}
+.num-field input {
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--bone);
+  padding: 6px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+.num-field input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+.num-field .hint {
+  font-size: 9px;
+  color: var(--bone-faint);
+  font-style: italic;
+}
+
+.sprite-preview h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+.sprite-preview .hint { opacity: 0.6; margin-left: 8px; text-transform: none; font-style: italic; }
+.dir-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.dir-cell {
+  text-align: center;
+}
+.dir-cell canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.06);
+  image-rendering: pixelated;
+}
+.dir-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--bone-faint);
+  margin-top: 4px;
+}
+
+.sprite-hint p {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--bone-faint);
+  max-width: 480px;
+}
+.sprite-hint em { color: var(--bone); font-style: italic; }
+
+@media (max-width: 900px) {
+  .config-grid { grid-template-columns: repeat(2, 1fr); }
+  .sprite-layout { grid-template-columns: 1fr; }
+  .trait-grid { grid-template-columns: 1fr; }
+}

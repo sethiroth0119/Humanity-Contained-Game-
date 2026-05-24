@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponItem.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"oak_staff"
+display_name = "Oak Staff"
+description = "Channels the wound between worlds."
+kind = 3
+stack = 1
+shape = 5               ; STAFF
+damage = 26.0
+attack_range = 7.0
+cooldown_ms = 700
+ranged = true
+ammo_id = &"mana"
+mana_cost = 15.0

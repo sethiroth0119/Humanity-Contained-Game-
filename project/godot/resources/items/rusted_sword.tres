@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponItem.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"rusted_sword"
+display_name = "Rusted Sword"
+description = "Pitted iron. It remembers blood."
+kind = 3                ; Item.Kind.WEAPON
+stack = 1
+shape = 0               ; WeaponItem.Shape.SWORD
+damage = 18.0
+attack_range = 1.4
+arc = 1.3
+cooldown_ms = 500
+stamina_cost = 8.0
+ranged = false
