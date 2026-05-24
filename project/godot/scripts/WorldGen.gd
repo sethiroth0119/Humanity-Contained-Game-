@@ -48,6 +48,19 @@ func _ready() -> void:
 	add_to_group("worldgen")
 	rng = RandomNumberGenerator.new()
 	rng.seed = seed_value
+	# NodePath exports don't auto-resolve in hand-written .tscn files,
+	# so find sibling nodes by name as a fallback.
+	var p := get_parent()
+	if ground_layer == null and p != null:
+		ground_layer = p.get_node_or_null("Ground") as TileMapLayer
+	if structures_root == null and p != null:
+		structures_root = p.get_node_or_null("Structures") as Node2D
+	if props_root == null and p != null:
+		props_root = p.get_node_or_null("Props") as Node2D
+	if enemies_root == null and p != null:
+		enemies_root = p.get_node_or_null("Enemies") as Node2D
+	if drops_root == null and p != null:
+		drops_root = p.get_node_or_null("Drops") as Node2D
 	if ground_layer != null and ground_layer.tile_set == null:
 		var pa: Node = get_node_or_null("/root/PlaceholderAssets")
 		if pa != null:
