@@ -28,6 +28,8 @@ var tile_pos: Vector2 = Vector2.ZERO
 var player: Player
 var kind: StringName
 
+const _FT_SCENE = preload("res://scenes/FloatingText.tscn")
+
 @onready var sprite: Node2D = $Sprite
 @onready var ai_host: Node = $AIHost
 
@@ -71,6 +73,12 @@ func take_damage(amount: float, source: Node) -> void:
 	if is_dying:
 		return
 	hp -= amount
+	var ft: FloatingText = _FT_SCENE.instantiate()
+	ft.global_position = global_position + Vector2(randf_range(-8, 8), -30)
+	get_tree().current_scene.add_child(ft)
+	ft.setup(str(int(amount)), Color(1.0, 0.25, 0.1))
+	if sprite != null:
+		sprite.queue_redraw()
 	alert = true
 	flash_ms = 200
 	# Knockback away from source

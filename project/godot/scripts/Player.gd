@@ -42,6 +42,7 @@ var blocking: bool = false
 var iframe_ms: int = 0
 var busy_until_ms: int = 0
 var dead: bool = false
+var _near_interact: Node = null
 
 # Children references (cached in _ready)
 @onready var sprite: Node2D = $Sprite
@@ -57,6 +58,7 @@ func _ready() -> void:
 	global_position = IsoMath.world_to_screen(tile_pos)
 	# Subscribe to UI signals
 	EventBus.emit_signal("stats_changed")
+	_give_starter_items()
 
 # ----------------------------------------------------------------------
 # Per-frame update
@@ -78,6 +80,7 @@ func _physics_process(delta: float) -> void:
 	# Cache tile_pos from current screen position
 	tile_pos = IsoMath.screen_to_world(global_position)
 	EventBus.emit_signal("stats_changed")
+	_update_interact_prompt()
 
 # ----------------------------------------------------------------------
 # Movement (iso WASD → screen-space velocity)
@@ -257,6 +260,121 @@ func _die() -> void:
 	dead = true
 	velocity = Vector2.ZERO
 	EventBus.emit_signal("player_died")
+
+# ----------------------------------------------------------------------
+# Starter items
+# ----------------------------------------------------------------------
+func _give_starter_items() -> void:
+	var axe := Database.item(&"hunting_axe")
+	if axe != null:
+		Inventory.add(axe, 1)
+		Inventory.equip(0)
+	var food := Database.item(&"canned_food")
+	if food != null:
+		Inventory.add(food, 3)
+	var water := Database.item(&"water_bottle")
+	if water != null:
+		Inventory.add(water, 3)
+	Inventory.hotbar[0] = -1
+	for i in Inventory.MAX_SLOTS:
+		var s = Inventory.slots[i]
+		if s == null: continue
+		if s.item.id == &"canned_food" and Inventory.hotbar[1] == null:
+			Inventory.hotbar[1] = i
+		elif s.item.id == &"water_bottle" and Inventory.hotbar[2] == null:
+			Inventory.hotbar[2] = i
+
+# ----------------------------------------------------------------------
+# Input — hotbar keys + interact
+# ----------------------------------------------------------------------
+func _input(event: InputEvent) -> void:
+	if dead: return
+	if event.is_action_pressed("interact"):
+		_interact()
+	for i in 5:
+		if event.is_action_pressed("hotbar_%d" % (i + 1)):
+			_use_hotbar(i)
+
+# ----------------------------------------------------------------------
+# Interact prompt
+# ----------------------------------------------------------------------
+func _update_interact_prompt() -> void:
+	var prev := _near_interact
+	_near_interact = _find_nearest_interactable(80.0)
+	if _near_interact == prev:
+		return
+	if _near_interact != null:
+		var lbl: String = "[E] Interact"
+		if _near_interact is Container:
+			lbl = "[E] Open %s" % (_near_interact as Container).container_label
+		elif _near_interact is Door:
+			lbl = "[E] %s" % ("Close door" if (_near_interact as Door).is_open else "Open door")
+		EventBus.emit_signal("prompt_show", lbl)
+	else:
+		EventBus.emit_signal("prompt_hide")
+
+func _find_nearest_interactable(max_dist: float) -> Node:
+	var best: Node = null
+	var best_dist: float = max_dist
+	var nodes: Array = get_tree().get_nodes_in_group("container")
+	nodes.append_array(get_tree().get_nodes_in_group("door"))
+	for node in nodes:
+		if not is_instance_valid(node): continue
+		var d: float = global_position.distance_to(node.global_position)
+		if d < best_dist:
+			best_dist = d
+			best = node
+	return best
+
+func _interact() -> void:
+	if _ui_blocking_input(): return
+	var target := _find_nearest_interactable(80.0)
+	if target == null:
+		EventBus.emit_signal("log_message", "Nothing to interact with.", &"dim")
+		return
+	if target is Container:
+		(target as Container).open_for(self)
+	elif target is Door:
+		(target as Door).toggle()
+
+# ----------------------------------------------------------------------
+# Hotbar / item use
+# ----------------------------------------------------------------------
+func _use_hotbar(idx: int) -> void:
+	if _ui_blocking_input() or dead: return
+	var slot_ref = Inventory.hotbar[idx]
+	if slot_ref == null: return
+	if slot_ref == -1: return  # sentinel = equipped weapon, already equipped
+	if slot_ref >= Inventory.MAX_SLOTS: return
+	use_item(slot_ref)
+
+func use_item(slot_index: int) -> void:
+	var s = Inventory.slots[slot_index]
+	if s == null: return
+	match s.item.kind:
+		Item.Kind.CONSUMABLE:
+			_use_consumable(s.item, slot_index)
+		Item.Kind.WEAPON, Item.Kind.ARMOR, Item.Kind.SHIELD, Item.Kind.ACCESSORY:
+			Inventory.equip(slot_index)
+
+func _use_consumable(item: Item, slot_index: int) -> void:
+	Inventory.remove_at(slot_index, 1)
+	if item.heal > 0:
+		hp = minf(max_hp, hp + item.heal)
+		EventBus.emit_signal("player_healed", float(item.heal))
+		EventBus.emit_signal("log_message", "Restored %d HP." % item.heal, &"good")
+	if item.restore_hunger > 0:
+		hunger = minf(max_hunger, hunger + float(item.restore_hunger))
+		EventBus.emit_signal("log_message", "You eat something.", &"dim")
+	if item.restore_thirst > 0:
+		thirst = minf(max_thirst, thirst + float(item.restore_thirst))
+		EventBus.emit_signal("log_message", "You drink.", &"dim")
+	if item.restore_mana > 0:
+		mana = minf(max_mana, mana + float(item.restore_mana))
+	match item.special:
+		&"illume": GameState.illuminate_for(60.0)
+		&"berserk": EventBus.emit_signal("log_message", "Blood-rage!", &"warn")
+	EventBus.emit_signal("stats_changed")
 
 # ----------------------------------------------------------------------
 # Helpers

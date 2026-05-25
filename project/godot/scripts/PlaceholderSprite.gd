@@ -12,6 +12,11 @@ func _ready() -> void:
 	_rng = RandomNumberGenerator.new()
 	call_deferred("_auto_style")
 
+func _process(_delta: float) -> void:
+	var p := get_parent()
+	if p != null and "hp" in p:
+		queue_redraw()
+
 func _auto_style() -> void:
 	var p := get_parent()
 	if p == null:
@@ -37,6 +42,16 @@ func _auto_style() -> void:
 
 func _draw() -> void:
 	_rng.seed = _seed
+	# Enemy HP bar
+	var p2 := get_parent()
+	if p2 != null and "hp" in p2 and "data" in p2 and p2.get("data") != null and not p2.is_in_group("player"):
+		var pct: float = clampf(float(p2.hp) / float(p2.data.max_hp), 0.0, 1.0)
+		var bw: float = 32.0
+		var bh: float = 4.0
+		var by: float = -60.0
+		draw_rect(Rect2(-bw * 0.5, by, bw, bh), Color(0.12, 0.04, 0.04, 0.9))
+		var hcol: Color = Color(0.1, 0.85, 0.1) if pct > 0.6 else (Color(0.85, 0.65, 0.1) if pct > 0.3 else Color(0.9, 0.1, 0.1))
+		draw_rect(Rect2(-bw * 0.5, by, bw * pct, bh), hcol)
 	match style:
 		Style.SURVIVOR:  _draw_survivor()
 		Style.CIVILIAN:  _draw_civilian()
