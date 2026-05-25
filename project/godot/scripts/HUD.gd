@@ -504,7 +504,7 @@ func _refresh_loot_list() -> void:
 		var idx: int = i
 		btn.pressed.connect(func():
 			if _loot_source == null or not is_instance_valid(_loot_source): return
-			var taken := _loot_source.take(idx)
+			var taken: Dictionary = _loot_source.take(idx)
 			if not taken.is_empty():
 				Inventory.add(taken.item, taken.qty)
 				EventBus.emit_signal("log_message", "Picked up %s." % taken.item.display_name, &"good")
@@ -515,7 +515,7 @@ func _refresh_loot_list() -> void:
 func _loot_take_all() -> void:
 	if _loot_source == null or not is_instance_valid(_loot_source): return
 	while _loot_source.loot.size() > 0:
-		var taken := _loot_source.take(0)
+		var taken: Dictionary = _loot_source.take(0)
 		if taken.is_empty(): break
 		Inventory.add(taken.item, taken.qty)
 		EventBus.emit_signal("log_message", "Picked up %s." % taken.item.display_name, &"good")
