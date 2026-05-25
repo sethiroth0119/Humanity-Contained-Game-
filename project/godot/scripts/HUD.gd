@@ -386,7 +386,7 @@ func _refresh_inventory_list() -> void:
 				btn.text = "Equip"
 				btn.custom_minimum_size = Vector2(58, 22)
 				btn.add_theme_font_size_override("font_size", 10)
-				var idx := i
+				var idx: int = i
 				btn.pressed.connect(func():
 					Inventory.equip(idx)
 					_refresh_inventory_list()
@@ -398,7 +398,7 @@ func _refresh_inventory_list() -> void:
 				btn.text = "Use"
 				btn.custom_minimum_size = Vector2(58, 22)
 				btn.add_theme_font_size_override("font_size", 10)
-				var idx := i
+				var idx: int = i
 				btn.pressed.connect(func():
 					if player != null:
 						player.use_item(idx)
@@ -415,7 +415,7 @@ func _refresh_inventory_list() -> void:
 		hot_btn.text = "→Hbr"
 		hot_btn.custom_minimum_size = Vector2(48, 22)
 		hot_btn.add_theme_font_size_override("font_size", 9)
-		var idx2 := i
+		var idx2: int = i
 		hot_btn.pressed.connect(func():
 			# Assign to first empty hotbar slot
 			for h in 5:
@@ -501,7 +501,7 @@ func _refresh_loot_list() -> void:
 		btn.text = "Take"
 		btn.custom_minimum_size = Vector2(52, 22)
 		btn.add_theme_font_size_override("font_size", 10)
-		var idx := i
+		var idx: int = i
 		btn.pressed.connect(func():
 			if _loot_source == null or not is_instance_valid(_loot_source): return
 			var taken := _loot_source.take(idx)
