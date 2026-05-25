@@ -49,7 +49,7 @@ func _draw() -> void:
 
 # ── shared helpers ────────────────────────────────────────────────────────────
 
-const SHADOW := PackedVector2Array([
+var SHADOW := PackedVector2Array([
 	Vector2(-9, 2), Vector2(0, -2), Vector2(9, 2), Vector2(0, 6)
 ])
 
