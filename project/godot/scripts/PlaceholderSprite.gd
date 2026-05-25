@@ -114,8 +114,8 @@ func _draw_survivor() -> void:
 
 func _draw_civilian() -> void:
 	_shadow()
-	var skins := [Color(0.88, 0.70, 0.54), Color(0.55, 0.38, 0.28), Color(0.95, 0.78, 0.62)]
-	var skin := skins[_rng.randi() % skins.size()]
+	var skins: Array[Color] = [Color(0.88, 0.70, 0.54), Color(0.55, 0.38, 0.28), Color(0.95, 0.78, 0.62)]
+	var skin: Color = skins[_rng.randi() % skins.size()]
 	var shirt_h := Color(_rng.randf_range(0.4, 0.8), _rng.randf_range(0.2, 0.6), _rng.randf_range(0.1, 0.5))
 	_body(skin, shirt_h, Color(0.22, 0.20, 0.28))
 	_hair(Color(_rng.randf_range(0.1, 0.7), _rng.randf_range(0.06, 0.4), 0.05), 7.0, _rng.randi() % 3)
