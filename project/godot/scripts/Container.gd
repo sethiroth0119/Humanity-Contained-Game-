@@ -13,7 +13,7 @@ extends Prop
 
 var opened: bool = false
 
-func open_for(_player: Player) -> Dictionary:
+func open_for(_player: Node) -> Dictionary:
 	opened = true
 	# Caller (HUD/LootPanel) reads `loot` + `loot_qty`.
 	EventBus.emit_signal("container_opened", self)
